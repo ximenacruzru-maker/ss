@@ -864,7 +864,7 @@ function generate(seed){
       {by:'U0', at:at(0,9,20), text:'That is why we do this. Please pass it on to the team.'}
     ]
   };
-  const st = {v:2, seed, biz:DEFAULT_BIZ, tagline:DEFAULT_LOGO?'':'In-home personal training', logo:DEFAULT_LOGO, brandV:1, ownerName:'', look:'blush', font:'athletic', themeV:2, trainers, clients, leads, sales, work, chat, ticks:{},
+  const st = {v:2, seed, biz:DEFAULT_BIZ, tagline:'', taglineV:1, logo:DEFAULT_LOGO, brandV:1, ownerName:'', look:'blush', font:'athletic', themeV:2, trainers, clients, leads, sales, work, chat, ticks:{},
     access:{}, sessions:[], weekStart:'', history:[], nextId:{c:cn+1,t:101,l:10,s:1,w:WORK.length+1}};
   buildWeek(st);
   return st;
@@ -917,7 +917,8 @@ function load(){
   if (!S || S.v!==2 || !Array.isArray(S.trainers)) S = generate(20261001);
   if (S.weekStart !== ymd(weekStart(new Date()))) buildWeek(S);
   if (S.brandV !== 1){ if (DEFAULT_LOGO && !S.logo){ S.logo = DEFAULT_LOGO; S.tagline = ''; S.biz = DEFAULT_BIZ; } S.brandV = 1; }
-  if (S.themeV !== 2){ S.look = 'blush'; S.themeV = 2; if (S.tagline == null) S.tagline = 'In-home personal training'; }
+  if (S.themeV !== 2){ S.look = 'blush'; S.themeV = 2; if (S.tagline == null) S.tagline = ''; }
+  if (S.taglineV !== 1){ if (/^in-home personal training$/i.test((S.tagline||'').trim())) S.tagline = ''; S.taglineV = 1; }
   if (S.sales.month !== ymd(today0()).slice(0,7)) { const g = generate(S.seed); S.sales = g.sales; }
   save();
 }
@@ -1541,7 +1542,7 @@ function vSettings(){
   const biz = `<section class="panel"><div class="panel-h"><h2>Business</h2></div><form id="bizForm" class="form">
     <label class="field" for="f_biz">Business name<input id="f_biz" name="f_biz" value="${esc(S.biz)}"></label>
     <label class="field" for="f_owner">Your name<input id="f_owner" name="f_owner" value="${esc(S.ownerName)}" placeholder="Shown on My Space"></label>
-    <label class="field" for="f_tagline">Tagline under your logo<input id="f_tagline" name="f_tagline" value="${esc(S.tagline||'')}" placeholder="In-home personal training"></label>
+    <label class="field" for="f_tagline">Tagline under your logo<input id="f_tagline" name="f_tagline" value="${esc(S.tagline||'')}" placeholder="Optional. Leave empty if your logo has one"></label>
     <div class="field"><span>Logo</span><div class="toolbar">${S.logo?`<img src="${S.logo}" alt="Current logo" style="max-height:44px;max-width:160px;background:#fff;border-radius:6px;padding:4px">`:''}<label class="btn" for="f_logo">${S.logo?'Replace logo':'Upload logo'}</label><input id="f_logo" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" hidden>${S.logo?'<button type="button" class="btn ghost danger" data-act="dropLogo">Remove</button>':''}</div><small class="muted">PNG, JPG, SVG or WebP, under 500 KB. Shown at the top of the sidebar.</small></div>
     <div class="actions" style="grid-column:1/-1;justify-content:flex-start"><button class="btn primary" type="submit">Save</button></div></form></section>`;
   return head('Administration','Settings',`${LOOKS[S.look]?.name||'Blush'} theme · ${(FONTS[S.font]||FONTS.athletic).name} typeface · ${STAFF.length} office staff · ${S.trainers.length} trainers`) + biz + looks + access;
