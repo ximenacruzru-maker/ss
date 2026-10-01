@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 </head>
 <body>
-<title>Declara Fitness</title>
+<title>GYMGUYZ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;0,800;1,800&family=Barlow:wght@400;500;600&display=swap">
@@ -698,7 +698,7 @@ const SECTIONS = [
 ];
 const ROLE_DEFAULTS = {owner:['performance','dispatch','payroll','team','work_manager'],admin:['performance','dispatch','payroll','team','work_manager'],coordinator:['dispatch','team']};
 const MODULES = [
-  {id:'m1',name:'Declara Fitness standards & code of conduct',hrs:1},
+  {id:'m1',name:'Company standards & code of conduct',hrs:1},
   {id:'m2',name:'In-home session protocol: arrival, setup, sanitizing',hrs:1.5},
   {id:'m3',name:'Client assessment, PAR-Q+ and medical clearance',hrs:2},
   {id:'m4',name:'Emergency action plan & incident reports',hrs:1},
@@ -973,6 +973,7 @@ const trainingPct = t => Math.round(MODULES.filter(m=>t.training?.[m.id]).length
 /* ================= who is signed in (Declara's roles & access) ================= */
 let asId = 'U0';
 function me(){ return P(asId); }
+const appName = () => S.logo ? S.biz : 'Declara Fitness';
 function role(){ return STAFF.find(u=>u.id===asId).role; }
 function can(k){ const r = role(); if (r==='owner'||r==='admin') return true; const a = S.access[asId]; return a && k in a ? !!a[k] : ROLE_DEFAULTS[r].includes(k); }
 
@@ -1085,9 +1086,9 @@ function renderShell(){
   $('#me').innerHTML = `<button data-act="menu" aria-label="Account menu">${av(u)}<span class="un"><b>${esc(fullName(u))}</b><em>${esc(u.title)}</em></span></button>`;
 }
 function render(){
-  applyLook(); renderShell();
+  applyLook(); renderShell(); document.title = appName();
   const v = currentView();
-  const banner = asId!=='U0' ? `<div class="preview">Previewing Declara Fitness as <b>${esc(fullName(me()))}</b> (${esc(me().title)}). They only see the sections switched on for them in Settings.<button class="btn sm" data-act="viewAs" data-id="U0">Back to owner view</button></div>` : '';
+  const banner = asId!=='U0' ? `<div class="preview">Previewing ${esc(appName())} as <b>${esc(fullName(me()))}</b> (${esc(me().title)}). They only see the sections switched on for them in Settings.<button class="btn sm" data-act="viewAs" data-id="U0">Back to owner view</button></div>` : '';
   $('#view').innerHTML = banner + ({today:vToday, work:vWork, chat:vChat, dashboard:vDash, sales:vSales, reports:vReports, schedule:vSchedule, clients:vClients, leads:vLeads, payroll:vPayroll, resources:vResources, trainers:vTrainers, training:vTraining, compliance:vCompliance, settings:vSettings})[v]();
   if (v==='chat'){ const s = $('.stream'); if (s) s.scrollTop = s.scrollHeight; }
 }
@@ -1533,7 +1534,7 @@ function vSettings(){
     <h3 class="sec-t">Typeface</h3><div class="looks">${Object.entries(FONTS).map(([k,f])=>`<button class="look ${curFont===k?'on':''}" data-act="font" data-v="${k}"><span class="fs" style="font-family:${FONT_DISPLAY_SAMPLE[k]},var(--font-display)">Aa</span><b>${f.name}</b><small>${f.note}</small></button>`).join('')}</div></section>`;
   if (!admin) return head('Administration','Settings','') + looks;
   const people = [...STAFF.filter(u=>u.id!=='U0')];
-  const access = `<section class="panel"><div class="panel-h"><h2>Team & access</h2><span class="meta">5 of 5 seats used. Only these five people can open Declara Fitness. Trainers don't sign in: they are managed here as records. Owners and admins see everything; switch sections on or off for coordinators.</span></div>
+  const access = `<section class="panel"><div class="panel-h"><h2>Team & access</h2><span class="meta">5 of 5 seats used. Only these five people can open ${esc(appName())}. Trainers don't sign in: they are managed here as records. Owners and admins see everything; switch sections on or off for coordinators.</span></div>
     <div class="tablewrap"><table class="access"><thead><tr><th>Person</th><th>Role</th>${SECTIONS.map(s=>`<th title="${esc(s.n)}">${s.l}</th>`).join('')}<th></th></tr></thead><tbody>
     ${people.map(u=>{const r=u.role;const full=r==='owner'||r==='admin';return `<tr><td><div class="who">${av(u)}<div><b>${esc(fullName(u))}</b><small>${esc(u.title)}</small></div></div></td><td>${ROLE_LABEL[r]}</td>${SECTIONS.map(s=>{const on=full||(S.access[u.id]&&s.k in S.access[u.id]?S.access[u.id][s.k]:ROLE_DEFAULTS[r].includes(s.k));return `<td style="text-align:center"><input type="checkbox" aria-label="${esc(s.l)} for ${esc(fullName(u))}" data-access="${u.id}" data-k="${s.k}" ${on?'checked':''} ${full?'disabled':''}></td>`;}).join('')}<td><button class="btn sm" data-act="viewAs" data-id="${u.id}">Preview as</button></td></tr>`;}).join('')}
     </tbody></table></div></section>`;
