@@ -1,0 +1,1637 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body>
+<title>Declara Fitness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;0,800;1,800&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: Declara's shell (one sidebar in four sections + top bar with search, Declara AI and account) dressed as a neon training console.
+   Looks are switched in Settings through data-look on <html>; the default Neon look is dark-first. */
+:root{
+  color-scheme: dark;
+  --bg:#0b0d10; --frame:#13161b; --panel:#181c22; --panel-2:#20252d; --line:#2a3039;
+  --fg:#eef2f5; --muted:#8e99a6; --dim:#5f6a77;
+  --lime:#b4ff2e; --cyan:#22d3ee; --ink:#0b0d10; --on-type:#0b0d10;
+  --tile-a:#141920; --tile-b:#0d1014;
+  --stripe1:rgba(180,255,46,.08); --stripe2:rgba(34,211,238,.06);
+  --ok:#34d399; --warn:#fbbf24; --bad:#fb7185;
+  --font-display:'Barlow Condensed','Arial Narrow','Roboto Condensed',sans-serif;
+  --font-body:'Barlow',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --r:10px;
+}
+:root[data-look="midnight"]{--bg:#0b1020;--frame:#10172a;--panel:#151c2e;--panel-2:#1c2540;--line:#28324f;--fg:#e9eefb;--muted:#8fa6d8;--dim:#5d6c93;--lime:#5b7bff;--cyan:#8fa6d8;--ink:#ffffff;--tile-a:#162040;--tile-b:#0e1529;--stripe1:rgba(91,123,255,.08);--stripe2:rgba(143,166,216,.05)}
+:root[data-look="declara"]{color-scheme:light;--bg:#eefaff;--frame:#ffffff;--panel:#ffffff;--panel-2:#f1f6fe;--line:#d3e0f3;--fg:#0d1b3d;--muted:#5a6b8c;--dim:#8a99b5;--lime:#164fec;--cyan:#4d60ff;--ink:#ffffff;--tile-a:#ffffff;--tile-b:#eef4ff;--stripe1:rgba(22,79,236,.07);--stripe2:rgba(77,96,255,.05);--ok:#0f9d6b;--warn:#b7791f;--bad:#d93654}
+:root[data-look="blush"]{color-scheme:light;--bg:#f6bfca;--frame:#fbe4e8;--panel:#fdf0f2;--panel-2:#f9dde3;--line:#efb6c2;--fg:#2b2226;--muted:#8a5664;--dim:#b8808e;--lime:#d9466b;--cyan:#c8102e;--ink:#ffffff;--tile-a:#fff6f8;--tile-b:#fbe3e8;--stripe1:rgba(217,70,107,.10);--stripe2:rgba(255,255,255,.35);--ok:#22875e;--warn:#b26a00;--bad:#c8102e}
+:root[data-look="blush"] .tile-wrap{filter:drop-shadow(0 6px 14px rgba(200,16,46,.14))}
+:root[data-look="blush"] .tile svg{background:color-mix(in srgb,var(--c) 14%,transparent);border-radius:50%;padding:9px;width:46px;height:46px}
+:root[data-look="blush"] .banner{color:#2b2226;border-color:var(--line);background:repeating-linear-gradient(118deg,rgba(217,70,107,.0) 0 22px,rgba(217,70,107,.16) 22px 26px),linear-gradient(135deg,#fbe4e8,#f4b3c1 70%,#ee9fb1)}
+:root[data-look="blush"] .banner::before{background:linear-gradient(135deg,#d9466b 0 30%,transparent 30%)}
+:root[data-look="blush"] .banner .tag{color:#c8102e}
+:root[data-look="blush"] .banner .spot{background:rgba(255,255,255,.6)}
+:root[data-look="blush"] .banner .spot small{color:#8a5664}
+:root[data-look="blush"] .top h1 em,:root[data-look="blush"] .brand b span{color:#c8102e}
+:root[data-look="halloween"]{--bg:#140826;--frame:#1c0b33;--panel:#2a1245;--panel-2:#34185a;--line:#44236e;--fg:#f3e6cf;--muted:#c3a9d8;--dim:#8a6aa8;--lime:#f07a12;--cyan:#6bd13a;--ink:#1c0b33;--tile-a:#2e1450;--tile-b:#1a0a30;--stripe1:rgba(240,122,18,.09);--stripe2:rgba(107,209,58,.06)}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 var(--font-body);
+  background-image:linear-gradient(118deg,transparent 0 62%,var(--stripe1) 62% 64%,transparent 64% 100%),linear-gradient(118deg,transparent 0 70%,var(--stripe2) 70% 71%,transparent 71% 100%),linear-gradient(118deg,var(--stripe1) 0 6%,transparent 6% 100%);
+  background-attachment:fixed}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--lime)}
+:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:var(--font-display);font-weight:700;letter-spacing:.02em;margin:0;text-wrap:balance}
+
+/* ---------- shell ---------- */
+.app{display:grid;grid-template-columns:250px minmax(0,1fr);min-height:100%;max-width:1640px;margin:0 auto}
+.side{position:sticky;top:env(safe-area-inset-top,0px);height:100vh;background:var(--frame);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:16px 0 12px}
+.brand{display:flex;align-items:center;gap:10px;padding:0 18px 14px;border-bottom:1px solid var(--line)}
+.brand svg{flex:none}
+.brand .hex{fill:var(--bg);stroke:var(--lime)}
+.brand .dee{stroke:var(--fg)}
+.brand .zap{fill:var(--lime)}
+.brand b{display:block;font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:.04em;line-height:1}
+.brand b span{color:var(--lime)}
+.brand small{display:block;color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-top:4px;line-height:1.3}
+.brand small em{font-style:normal;color:var(--fg);letter-spacing:.02em;text-transform:none;font-size:12.5px}
+.nav{display:flex;flex-direction:column;padding:8px 0;flex:1;overflow:auto}
+.nav-h{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);padding:14px 22px 5px;font-weight:600}
+.nav a{display:flex;align-items:center;gap:12px;padding:8px 20px;color:var(--muted);text-decoration:none;font-family:var(--font-display);font-size:18px;font-weight:600;letter-spacing:.02em;border-left:4px solid transparent}
+.nav a:hover{color:var(--fg);background:color-mix(in srgb,var(--fg) 4%,transparent)}
+.nav a.on{color:var(--lime);background:linear-gradient(90deg,color-mix(in srgb,var(--lime) 14%,transparent),transparent);border-left-color:var(--lime)}
+.nav a svg{width:20px;height:20px;flex:none}
+.nav .badge{margin-left:auto;font-family:var(--font-body);font-size:11px;font-weight:600;background:var(--lime);color:var(--ink);border-radius:20px;padding:1px 8px}
+.side-foot{padding:10px 18px 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.side-foot .live{font-size:13px;color:var(--muted)}
+.side-foot .live b{color:var(--fg)}
+.linkbtn{background:none;border:0;padding:0;color:var(--dim);font-size:12px;text-align:left;text-decoration:underline;text-underline-offset:3px}
+.linkbtn:hover{color:var(--fg)}
+
+.main{min-width:0;display:flex;flex-direction:column}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;align-items:center;gap:14px;padding:12px 28px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top h1{font-size:28px;font-weight:800;text-transform:uppercase;white-space:nowrap}
+.top h1 em{font-style:normal;color:var(--lime)}
+.sample{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border:1px dashed var(--line);border-radius:20px;padding:2px 9px;white-space:nowrap}
+.search{position:relative;margin-left:auto;flex:1 1 220px;max-width:320px;min-width:160px}
+.search input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:30px;padding:9px 14px 9px 36px}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted)}
+.results{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 18px 40px rgba(0,0,0,.35);overflow:hidden;z-index:40}
+.results button{display:flex;width:100%;gap:10px;align-items:center;background:none;border:0;padding:9px 12px;text-align:left}
+.results button:hover,.results button:focus-visible{background:color-mix(in srgb,var(--lime) 10%,transparent)}
+.results small{color:var(--muted);margin-left:auto;font-size:12px}
+.clock{font-family:var(--font-display);font-size:19px;font-weight:600;color:var(--muted);white-space:nowrap;letter-spacing:.03em}
+.ai-btn{display:inline-flex;align-items:center;gap:7px;background:linear-gradient(135deg,var(--lime),var(--cyan));color:var(--ink);border:0;border-radius:30px;padding:8px 14px;font-weight:700;font-family:var(--font-display);font-size:17px;letter-spacing:.04em;white-space:nowrap}
+.ai-btn svg{width:17px;height:17px}
+.bell{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:50%;width:40px;height:40px;display:grid;place-items:center;flex:none}
+.bell svg{width:20px;height:20px}
+.bell i{position:absolute;top:-3px;right:-3px;background:var(--bad);color:#fff;font-style:normal;font-size:10px;font-weight:700;border-radius:20px;min-width:18px;height:18px;display:grid;place-items:center;padding:0 4px}
+.me{position:relative}
+.me > button{display:flex;align-items:center;gap:9px;background:none;border:0;padding:0;text-align:left}
+.me .av{width:40px;height:40px;font-size:16px}
+.me .un{line-height:1.15;white-space:nowrap}
+.me .un b{display:block;font-weight:600;font-size:14px}
+.me .un em{display:block;font-style:normal;color:var(--muted);font-size:12px}
+.menu{position:absolute;right:0;top:calc(100% + 8px);background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);min-width:230px;box-shadow:0 18px 40px rgba(0,0,0,.35);z-index:45;overflow:hidden}
+.menu button,.menu a{display:block;width:100%;background:none;border:0;padding:10px 14px;text-align:left;color:var(--fg);text-decoration:none;font-size:14px}
+.menu button:hover,.menu a:hover{background:color-mix(in srgb,var(--lime) 10%,transparent)}
+.preview{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:color-mix(in srgb,var(--cyan) 14%,var(--panel));border:1px solid color-mix(in srgb,var(--cyan) 40%,transparent);border-radius:12px;padding:10px 14px;font-size:14px}
+.preview .btn{margin-left:auto}
+
+#view{padding:22px 28px 48px;display:flex;flex-direction:column;gap:22px}
+.page-head{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.page-head .kicker{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--lime);font-weight:600}
+.page-head h2{font-size:34px;line-height:1.05;text-transform:uppercase}
+.page-head p{margin:4px 0 0;color:var(--muted);max-width:75ch;font-size:14px}
+.page-head .right{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+
+/* ---------- neon KPI tiles ---------- */
+.tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:18px}
+.tile-wrap{--c:var(--lime);filter:drop-shadow(0 0 10px color-mix(in srgb,var(--c) 40%,transparent));position:relative}
+.tile-frame{background:linear-gradient(160deg,var(--c),color-mix(in srgb,var(--c) 30%,transparent) 55%,var(--c));padding:2px;clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px)}
+.tile{background:linear-gradient(180deg,var(--tile-a),var(--tile-b));clip-path:polygon(15px 0,100% 0,100% calc(100% - 15px),calc(100% - 15px) 100%,0 100%,0 15px);padding:16px 14px 14px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:164px;justify-content:space-between}
+.tile-wrap::after{content:"";position:absolute;top:-7px;right:14px;width:46px;height:5px;background:repeating-linear-gradient(118deg,var(--c) 0 7px,transparent 7px 11px)}
+.tile .lbl{font-family:var(--font-display);font-weight:700;font-size:17px;line-height:1.05;letter-spacing:.04em;text-transform:uppercase}
+.tile svg{width:28px;height:28px;color:var(--c)}
+.tile .val{font-family:var(--font-display);font-weight:800;font-size:44px;line-height:1;letter-spacing:.01em}
+.tile .val small{font-size:20px;color:var(--muted);font-weight:600}
+.tile .sub{font-size:12px;color:var(--muted)}
+.tile .sub b{color:var(--c);font-weight:600}
+
+/* ---------- panels ---------- */
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:22px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;min-width:0}
+.panel-h{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.panel-h h2{font-size:22px;text-transform:uppercase;letter-spacing:.04em}
+.panel-h .meta{color:var(--muted);font-size:13px}
+.panel-h .right{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.c3{grid-column:span 3}.c4{grid-column:span 4}.c5{grid-column:span 5}.c6{grid-column:span 6}.c7{grid-column:span 7}.c8{grid-column:span 8}.c12{grid-column:span 12}
+
+.btn{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:8px 14px;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;text-decoration:none;color:var(--fg)}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--lime);border-color:var(--lime);color:var(--ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.sm{padding:5px 10px;font-size:13px}
+.btn.ghost{background:none}
+.btn.danger{color:var(--bad)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;border-radius:20px;padding:2px 10px;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.pill.ok{color:var(--ok);background:color-mix(in srgb,var(--ok) 13%,transparent)}
+.pill.warn{color:var(--warn);background:color-mix(in srgb,var(--warn) 13%,transparent)}
+.pill.bad{color:var(--bad);background:color-mix(in srgb,var(--bad) 13%,transparent)}
+.pill.info{color:var(--cyan);background:color-mix(in srgb,var(--cyan) 13%,transparent)}
+.pill.mute{color:var(--muted);background:color-mix(in srgb,var(--fg) 6%,transparent)}
+.pill.live{color:var(--lime);background:color-mix(in srgb,var(--lime) 13%,transparent)}
+.pill.live::before{animation:pulse 1.4s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.chip{display:inline-block;font-size:12px;border-radius:6px;padding:1px 7px;background:color-mix(in srgb,var(--fg) 7%,transparent);color:var(--fg);white-space:nowrap;border-left:3px solid var(--tc,var(--muted))}
+
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.toolbar input[type=search],.toolbar input[type=text],.toolbar select,.field input,.field select,.field textarea,.fld{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:8px 11px;min-width:0;color:var(--fg)}
+.toolbar input[type=search]{width:240px;max-width:100%}
+.toolbar .count{color:var(--muted);font-size:13px;margin-left:auto}
+.seg{display:inline-flex;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:3px;flex-wrap:wrap}
+.seg button{background:none;border:0;border-radius:6px;padding:5px 12px;font-weight:600;font-size:13px;color:var(--muted)}
+.seg button.on{background:var(--lime);color:var(--ink)}
+
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{position:sticky;top:0;background:var(--panel-2);text-align:left;font-family:var(--font-display);font-size:14px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:10px 12px;white-space:nowrap}
+td{padding:9px 12px;border-top:1px solid var(--line);vertical-align:middle}
+tbody tr[data-act]{cursor:pointer}
+tbody tr[data-act]:hover{background:color-mix(in srgb,var(--lime) 5%,transparent)}
+tr.total td{font-weight:700;background:var(--panel-2)}
+td.r,th.r{text-align:right}
+.muted{color:var(--muted)}
+.who{display:flex;align-items:center;gap:10px;min-width:180px}
+.who b{display:block;font-weight:600;white-space:nowrap}
+.who small{display:block;color:var(--muted);font-size:12px}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;font-size:15px;flex:none;color:#0b0d10}
+.bar{height:6px;border-radius:6px;background:color-mix(in srgb,var(--fg) 9%,transparent);overflow:hidden;min-width:70px}
+.bar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--lime),var(--cyan))}
+.bar.hot i{background:var(--warn)}
+.util{display:flex;align-items:center;gap:8px}
+.util span{font-size:12px;color:var(--muted);min-width:34px;text-align:right}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%}
+.dot.ok{background:var(--ok)}.dot.warn{background:var(--warn)}.dot.bad{background:var(--bad)}
+.more{display:flex;justify-content:center;padding:12px}
+
+.alerts{display:flex;flex-direction:column;gap:8px}
+.alert{display:flex;align-items:center;gap:12px;background:var(--panel-2);border-radius:10px;padding:10px 12px;border-left:4px solid var(--s,var(--muted));text-decoration:none;color:inherit}
+.alert:hover{background:color-mix(in srgb,var(--fg) 6%,var(--panel-2))}
+.alert b{font-family:var(--font-display);font-size:26px;font-weight:700;min-width:36px;text-align:center;color:var(--s)}
+.alert div{min-width:0}
+.alert strong{display:block;font-weight:600}
+.alert small{color:var(--muted);font-size:12.5px}
+.alert svg{margin-left:auto;width:18px;height:18px;color:var(--muted);flex:none}
+
+.livestats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.livestats div{background:var(--panel-2);border-radius:10px;padding:10px 12px}
+.livestats b{display:block;font-family:var(--font-display);font-size:30px;line-height:1.05}
+.livestats small{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.feed{display:flex;flex-direction:column;max-height:260px;overflow:auto;padding-right:4px}
+.feed button{display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:10px;align-items:center;background:none;border:0;border-bottom:1px solid var(--line);padding:8px 2px;text-align:left}
+.feed button:hover{background:color-mix(in srgb,var(--fg) 4%,transparent)}
+.feed .t{font-family:var(--font-display);font-size:16px;color:var(--muted)}
+.feed .w{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.feed .w small{color:var(--muted)}
+svg text{font-family:var(--font-body)}
+.chart{width:100%;height:auto;display:block}
+
+.lb{display:flex;flex-direction:column;gap:4px}
+.lb button{display:grid;grid-template-columns:26px 34px minmax(0,1fr) auto;gap:10px;align-items:center;background:none;border:0;padding:6px 4px;border-radius:8px;text-align:left}
+.lb button:hover{background:color-mix(in srgb,var(--fg) 5%,transparent)}
+.lb .rk{font-family:var(--font-display);font-size:20px;font-weight:800;color:var(--dim);text-align:center}
+.lb button:first-child .rk{color:var(--lime)}
+.lb .nm{min-width:0}
+.lb .nm b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.lb .nm small{color:var(--muted);font-size:12px}
+.lb .sc{text-align:right;font-family:var(--font-display);font-size:22px;font-weight:700}
+.lb .sc small{display:block;font-family:var(--font-body);font-size:11px;color:var(--muted);font-weight:400}
+
+.hbars{display:flex;flex-direction:column;gap:10px}
+.hbar{display:grid;grid-template-columns:130px minmax(0,1fr) 90px;gap:12px;align-items:center;font-size:14px}
+.hbar .track{height:16px;border-radius:4px;background:color-mix(in srgb,var(--fg) 6%,transparent);overflow:hidden;display:flex}
+.hbar .track i{display:block;height:100%}
+.hbar .v{text-align:right;color:var(--muted);font-size:13px}
+.hbar .v b{color:var(--fg)}
+
+.banner{position:relative;overflow:hidden;border-radius:14px;padding:26px 28px;min-height:180px;display:flex;flex-direction:column;justify-content:center;color:#fff;
+  background:linear-gradient(118deg,transparent 0 58%,color-mix(in srgb,var(--lime) 90%,transparent) 58% 59.2%,transparent 59.2% 64%,color-mix(in srgb,var(--cyan) 80%,transparent) 64% 64.8%,transparent 64.8%),radial-gradient(circle at 85% 50%,rgba(34,211,238,.35),transparent 55%),linear-gradient(135deg,#0b2a4a,#0a1a30 60%,#071222);border:1px solid #1d3b5c}
+.banner::before{content:"";position:absolute;left:0;top:0;width:90px;height:90px;background:linear-gradient(135deg,var(--lime) 0 30%,transparent 30%)}
+.banner .big{font-family:var(--font-display);font-style:italic;font-weight:800;font-size:46px;line-height:.95;text-transform:uppercase;position:relative}
+.banner .tag{font-family:var(--font-display);font-style:italic;font-weight:800;color:var(--lime);font-size:20px;letter-spacing:.04em;text-transform:uppercase;margin-top:6px;position:relative}
+:root[data-look="declara"] .banner .tag{color:#9fd0ff}
+.banner .spot{position:relative;margin-top:14px;display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.35);border-radius:10px;padding:10px 12px;max-width:460px}
+.banner .spot small{color:#b8c7d6;display:block;font-size:12px}
+.banner .spot b{font-weight:600}
+.banner .bolt{position:absolute;right:26px;top:50%;transform:translateY(-50%);width:120px;height:120px;color:var(--lime);opacity:.9}
+
+/* schedule */
+.days{display:flex;gap:8px;flex-wrap:wrap}
+.days button{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:6px 12px;text-align:center;min-width:76px;line-height:1.15}
+.days button b{display:block;font-family:var(--font-display);font-size:16px;letter-spacing:.06em}
+.days button small{color:var(--muted);font-size:12px}
+.days button.on{border-color:var(--lime);background:color-mix(in srgb,var(--lime) 12%,var(--panel-2))}
+.days button.on b{color:var(--lime)}
+.days button.today small{color:var(--cyan)}
+.legend{display:flex;gap:6px;flex-wrap:wrap}
+.board{min-width:980px}
+.bhead,.brow{display:grid;grid-template-columns:200px minmax(0,1fr)}
+.bhead{position:sticky;top:0;background:var(--panel-2);z-index:2}
+.bhead .hrs{position:relative;height:30px}
+.bhead .hrs span{position:absolute;top:7px;font-size:11px;color:var(--muted);transform:translateX(-50%)}
+.brow{border-top:1px solid var(--line);min-height:44px}
+.brow .bn{display:flex;align-items:center;gap:8px;padding:5px 10px;font-size:13px;cursor:pointer;min-width:0}
+.brow .bn b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.brow .bn small{color:var(--muted);font-size:11px;display:block}
+.brow .bn .av{width:28px;height:28px;font-size:12px}
+.trk{position:relative;background-image:repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px calc(100%/15))}
+.blk{position:absolute;top:6px;bottom:6px;border-radius:6px;border:0;color:var(--on-type);font-size:11px;font-weight:600;padding:2px 6px;text-align:left;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.3}
+.blk small{display:block;font-weight:500;opacity:.8}
+.blk.cx{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--fg) 9%,transparent) 0 6px,transparent 6px 12px)!important;color:var(--muted);outline:1px dashed var(--dim)}
+.blk.ns{outline:2px solid var(--bad);opacity:.6}
+.blk.ip{box-shadow:0 0 0 2px var(--fg),0 0 16px var(--lime)}
+.blk.done{opacity:.55}
+.nowline{position:absolute;top:0;bottom:0;width:2px;background:var(--bad);z-index:1;pointer-events:none}
+.leave{color:var(--dim);font-size:12px;padding:12px 10px}
+.week{display:grid;grid-template-columns:44px repeat(7,minmax(110px,1fr));min-width:860px}
+.week .wh{text-align:center;padding:8px 4px;font-family:var(--font-display);color:var(--muted);font-size:16px;letter-spacing:.06em;border-bottom:1px solid var(--line);line-height:1.1}
+.week .wh small{display:block;font-family:var(--font-body);font-size:12px}
+.week .wh.today{color:var(--lime)}
+.week .ax{position:relative}
+.week .ax span{position:absolute;right:6px;font-size:11px;color:var(--muted);transform:translateY(-50%)}
+.week .col{position:relative;border-left:1px solid var(--line);background-image:repeating-linear-gradient(180deg,var(--line) 0 1px,transparent 1px 44px)}
+.week .blk{left:4px;right:4px;top:auto;bottom:auto;white-space:normal;text-align:center;display:flex;flex-direction:column;justify-content:center;font-family:var(--font-display);font-size:16px}
+.week .blk small{font-family:var(--font-body);font-size:11px}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card-h{display:flex;align-items:flex-start;gap:10px}
+.card-h b{font-size:17px;font-weight:600;display:block}
+.card-h small{color:var(--muted);font-size:12.5px}
+.card-h .pill{margin-left:auto}
+.kv{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 12px;font-size:13.5px;margin:0}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0}
+.match{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.mrow{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--panel-2);border-radius:10px;padding:8px 10px}
+.mrow b{font-weight:600;display:block}
+.mrow small{color:var(--muted);font-size:12px;display:block}
+.score{font-family:var(--font-display);font-weight:800;font-size:20px;color:var(--lime);text-align:right;line-height:1}
+.score small{font-family:var(--font-body);font-size:10px;color:var(--muted);font-weight:400}
+
+.strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.stat small{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;display:block}
+.stat b{font-family:var(--font-display);font-size:34px;line-height:1.1;display:block}
+.stat span{font-size:12.5px;color:var(--muted)}
+.stat.warn b{color:var(--warn)}.stat.good b{color:var(--ok)}.stat.bad b{color:var(--bad)}
+.cc{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.cc small{color:var(--muted);font-size:12px}
+
+/* checklist */
+.prog{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:13px;color:var(--muted)}
+.prog .bar{flex:1}
+.checks{display:flex;flex-direction:column;gap:2px}
+.check{display:flex;gap:10px;align-items:flex-start;padding:8px 6px;border-radius:8px;cursor:pointer}
+.check:hover{background:color-mix(in srgb,var(--fg) 4%,transparent)}
+.check input{width:18px;height:18px;margin-top:2px;accent-color:var(--lime);flex:none}
+.check.done span{text-decoration:line-through;color:var(--muted)}
+.check small{display:block;color:var(--muted);font-size:12px;text-decoration:none}
+
+/* chat */
+.chat{display:grid;grid-template-columns:220px minmax(0,1fr);background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;min-height:540px}
+.chans{border-right:1px solid var(--line);padding:12px 8px;display:flex;flex-direction:column;gap:2px;background:var(--frame)}
+.chans h3{font-size:13px;letter-spacing:.14em;color:var(--dim);padding:6px 10px;text-transform:uppercase}
+.chans button{background:none;border:0;text-align:left;padding:8px 10px;border-radius:8px;color:var(--muted);font-weight:600;display:flex;gap:8px}
+.chans button.on{background:color-mix(in srgb,var(--lime) 14%,transparent);color:var(--lime)}
+.chans button small{margin-left:auto;font-weight:400}
+.msgs{display:flex;flex-direction:column;min-width:0}
+.msgs-h{padding:12px 16px;border-bottom:1px solid var(--line)}
+.msgs-h b{font-family:var(--font-display);font-size:20px;letter-spacing:.04em}
+.msgs-h small{color:var(--muted);display:block}
+.stream{flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:14px;max-height:520px}
+.msg{display:flex;gap:10px}
+.msg .av{width:32px;height:32px;font-size:13px}
+.msg b{font-weight:600}
+.msg time{color:var(--muted);font-size:12px;margin-left:6px}
+.msg p{margin:2px 0 0;max-width:70ch}
+.composer{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
+.composer input{flex:1;min-width:0}
+
+/* AI panel */
+.ai{position:fixed;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);width:min(420px,calc(100% - 32px));height:min(620px,calc(100% - 100px));background:var(--frame);border:1px solid var(--line);border-radius:18px;z-index:70;display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(0,0,0,.45);overflow:hidden}
+.ai-h{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,color-mix(in srgb,var(--lime) 18%,transparent),color-mix(in srgb,var(--cyan) 12%,transparent))}
+.ai-h b{font-family:var(--font-display);font-size:22px;letter-spacing:.04em}
+.ai-h small{display:block;color:var(--muted);font-size:12px}
+.ai-log{flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+.ai-me{align-self:flex-end;background:var(--lime);color:var(--ink);border-radius:14px 14px 4px 14px;padding:8px 12px;max-width:85%;font-weight:500}
+.ai-bot{align-self:flex-start;background:var(--panel-2);border-radius:14px 14px 14px 4px;padding:10px 12px;max-width:92%;font-size:14px}
+.ai-bot ul{margin:6px 0 0;padding-left:18px}
+.ai-bot li{margin:2px 0}
+.ai-bot .go{display:inline-block;margin-top:8px}
+.ai-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 10px}
+.ai-chips button{background:var(--panel-2);border:1px solid var(--line);border-radius:20px;padding:4px 10px;font-size:12.5px;color:var(--fg)}
+.ai-chips button:hover{border-color:var(--lime)}
+.ai form{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
+.ai form input{flex:1;min-width:0;background:var(--panel-2);border:1px solid var(--line);border-radius:30px;padding:9px 14px;color:var(--fg)}
+
+/* settings */
+.looks{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.look{background:var(--panel-2);border:2px solid var(--line);border-radius:12px;padding:12px;text-align:left;display:flex;flex-direction:column;gap:8px}
+.look.on{border-color:var(--lime)}
+.look b{font-weight:600}
+.look small{color:var(--muted);font-size:12px}
+.sw{display:flex;gap:4px}
+.sw i{width:22px;height:22px;border-radius:6px;border:1px solid rgba(127,127,127,.3)}
+.access td{white-space:nowrap}
+.access input{accent-color:var(--lime);width:16px;height:16px}
+
+/* overlays */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:60}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(520px,100%);background:var(--frame);border-left:1px solid var(--line);z-index:61;overflow:auto;padding:calc(env(safe-area-inset-top,0px) + 20px) 22px calc(env(safe-area-inset-bottom,0px) + 30px);display:flex;flex-direction:column;gap:18px;box-shadow:-20px 0 50px rgba(0,0,0,.4)}
+.d-h{display:flex;gap:14px;align-items:center}
+.d-h .av{width:56px;height:56px;font-size:22px}
+.d-h h2{font-size:28px;line-height:1}
+.d-h p{margin:4px 0 0;color:var(--muted);font-size:13.5px}
+.x{margin-left:auto;align-self:flex-start;background:var(--panel-2);border:1px solid var(--line);border-radius:50%;width:36px;height:36px;display:grid;place-items:center;flex:none}
+.d-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.d-stats div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
+.d-stats small{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.d-stats b{font-family:var(--font-display);font-size:26px;line-height:1.1}
+.sec h3{font-size:16px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px}
+.list{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.list > *{display:flex;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid var(--line);background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;width:100%;color:var(--fg)}
+.list > *:first-child{border-top:0}
+.list button:hover{background:color-mix(in srgb,var(--fg) 4%,transparent)}
+.list .end{margin-left:auto;display:flex;gap:8px;align-items:center}
+.list small{color:var(--muted)}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,calc(100% - 32px));max-height:calc(100% - 40px);overflow:auto;background:var(--frame);border:1px solid var(--line);border-radius:16px;z-index:62;padding:22px;display:flex;flex-direction:column;gap:16px;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.modal h2{font-size:26px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted);min-width:0}
+.field.full{grid-column:1/-1}
+.field input,.field select,.field textarea{font-size:15px}
+.actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);transform:translateX(-50%);background:var(--lime);color:var(--ink);font-weight:600;border-radius:30px;padding:10px 20px;z-index:80;box-shadow:0 10px 30px rgba(0,0,0,.4);max-width:calc(100% - 32px)}
+.empty{color:var(--muted);text-align:center;padding:28px;font-size:14px}
+.note{color:var(--muted);font-size:13px;margin:0}
+.prose{max-width:72ch;line-height:1.6}
+.prose ol,.prose ul{padding-left:20px;margin:6px 0}
+.prose li{margin:4px 0}
+
+@media (max-width:1380px){.clock{display:none}}
+@media (max-width:1280px){
+  .tiles{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .c3,.c4,.c5{grid-column:span 6}.c6,.c7,.c8{grid-column:span 12}
+  .me .un{display:none}
+}
+@media (max-width:900px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;height:auto;flex-direction:row;align-items:center;padding:8px 16px;gap:10px;border-right:0;border-bottom:1px solid var(--line)}
+  .brand{border:0;padding:0}
+  .brand small{display:none}
+  .nav{flex-direction:row;padding:0;overflow-x:auto}
+  .nav-h{display:none}
+  .nav a{padding:8px 10px;border-left:0;border-bottom:3px solid transparent;font-size:16px;white-space:nowrap}
+  .nav a.on{border-bottom-color:var(--lime);background:none}
+  .nav a svg{display:none}
+  .side-foot{display:none}
+  .top{position:static;flex-wrap:wrap;padding:12px 16px}
+  .top h1{font-size:22px}
+  .search{order:5;width:100%;margin-left:0}
+  .clock{margin-left:auto;font-size:16px}
+  #view{padding:18px 16px 40px}
+  .c3,.c4,.c5,.c6,.c7,.c8,.c12{grid-column:span 12}
+  .strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .livestats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .chat{grid-template-columns:minmax(0,1fr)}
+  .chans{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line)}
+  .chans h3{display:none}
+  .chans button{white-space:nowrap}
+}
+@media (max-width:560px){
+  .tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .tile{min-height:146px}
+  .tile .val{font-size:36px}
+  .tile .lbl{font-size:15px}
+  .sample,.clock{display:none}
+  .ai-btn span{display:none}
+  .form{grid-template-columns:1fr}
+  .d-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .banner .big{font-size:34px}
+  .banner .bolt{display:none}
+  .hbar{grid-template-columns:90px minmax(0,1fr) 74px}
+  .toolbar input[type=search]{width:100%}
+  .page-head h2{font-size:28px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><path class="hex" d="M20 2 36 11v18L20 38 4 29V11Z" stroke-width="2.5"/><path class="dee" d="M13 11h7.5c6 0 9.5 3.6 9.5 9s-3.5 9-9.5 9H13Z" fill="none" stroke-width="2.6"/><path class="zap" d="M22 13l-5 8h4l-2 6 6-9h-4l2-5Z"/></svg>
+      <div><b>DECLARA <span>FITNESS</span></b><small>For <em id="bizName"></em></small></div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-foot">
+      <div class="live" id="sideLive"></div>
+      <button class="linkbtn" data-act="reset">Reset sample data</button>
+    </div>
+  </aside>
+  <div class="main">
+    <header class="top">
+      <h1 id="pageTitle"></h1>
+      <span class="sample" title="Generated example data for 100 trainers. Your edits are saved in this browser.">Sample data</span>
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input id="gsearch" type="search" placeholder="Search trainers or clients" autocomplete="off" aria-label="Search trainers or clients">
+        <div class="results" id="gresults" hidden></div>
+      </div>
+      <div class="clock num" id="clock"></div>
+      <button class="ai-btn" data-act="ai" aria-label="Open Declara AI"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2Zm7 12 .9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9L19 14Z"/></svg><span>Declara AI</span></button>
+      <button class="bell" data-act="bell" aria-label="Items needing attention"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg><i id="bellCount" hidden></i></button>
+      <div class="me" id="me"></div>
+    </header>
+    <main id="view"></main>
+  </div>
+</div>
+<div id="layer"></div>
+<div id="aiLayer"></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+'use strict';
+/* ================= constants ================= */
+const ZONES = ['North Hills','Riverside','Downtown','Lakeshore','Westgate','Eastview','Southpark','Oak Valley'];
+const NEIGHBORS = {'North Hills':['Riverside','Westgate'],'Riverside':['North Hills','Downtown','Lakeshore'],'Downtown':['Riverside','Westgate','Eastview','Southpark'],'Lakeshore':['Riverside','Eastview'],'Westgate':['North Hills','Downtown','Oak Valley'],'Eastview':['Lakeshore','Downtown','Southpark'],'Southpark':['Downtown','Eastview','Oak Valley'],'Oak Valley':['Westgate','Southpark']};
+const SPECS = ['Strength','HIIT','Weight Loss','Mobility & Seniors','Pre/Postnatal','Sports Performance','Post-Rehab','Boxing','Yoga & Pilates'];
+const SPEC_WORDS = {'Strength':/strength|lifting/,'HIIT':/hiit|conditioning|interval/,'Weight Loss':/weight|fat loss/,'Mobility & Seniors':/mobility|senior|balance|older/,'Pre/Postnatal':/prenatal|postnatal|postpartum|pregnan/,'Sports Performance':/sport|athlet|race|marathon/,'Post-Rehab':/rehab|injur|surgery/,'Boxing':/box/,'Yoga & Pilates':/yoga|pilates|flexib/};
+const TYPE_COLORS = {'Strength':'#b4ff2e','HIIT':'#e45ad8','Weight Loss':'#22d3ee','Mobility & Seniors':'#34d399','Pre/Postnatal':'#f9a8d4','Sports Performance':'#60a5fa','Post-Rehab':'#2dd4bf','Boxing':'#fb923c','Yoga & Pilates':'#a78bfa'};
+const CERTS = ['NASM-CPT','ACE-CPT','ACSM-CPT','NSCA-CSCS','ISSA-CPT'];
+const PACKAGES = {
+  p10:{name:'10-Session Pack',short:'10-Pack',size:10,per:85},
+  p20:{name:'20-Session Pack',short:'20-Pack',size:20,per:80},
+  m8:{name:'Monthly · 2x/week',short:'Monthly 2x',size:8,per:80},
+  m12:{name:'Monthly · 3x/week',short:'Monthly 3x',size:12,per:75},
+  duo:{name:'Partner 10-Pack',short:'Partner',size:10,per:120}
+};
+const GOALS = [
+  {g:'Lose weight & build habits',s:'Weight Loss'},{g:'Get stronger',s:'Strength'},{g:'Improve balance & mobility',s:'Mobility & Seniors'},
+  {g:'Pre/postnatal fitness',s:'Pre/Postnatal'},{g:'Train for a sport or race',s:'Sports Performance'},{g:'Return from injury or surgery',s:'Post-Rehab'},
+  {g:'High-energy conditioning',s:'HIIT'},{g:'Learn to box',s:'Boxing'},{g:'Flexibility & core',s:'Yoga & Pilates'}
+];
+const SLOTS = {Mornings:[360,510],Midday:[600,750],Evenings:[960,1170]};
+const FIRST = ['Marcus','Jasmine','Tyler','Priya','Andre','Kayla','Diego','Brianna','Jordan','Alexis','Malik','Sofia','Ethan','Imani','Carlos','Hannah','Darius','Leah','Noah','Gabriela','Isaiah','Megan','Xavier','Tara','Logan','Nia','Mateo','Chloe','Trevor','Aaliyah','Owen','Renee','Elijah','Camila','Grant','Monique','Caleb','Vanessa','Jalen','Natalie','Kendra','Ryan','Simone','Victor','Bianca','Devon','Lauren','Omar','Paige','Rafael'];
+const CFIRST = ['Linda','Robert','Patricia','James','Susan','Michael','Karen','David','Nancy','Richard','Lisa','Thomas','Betty','Daniel','Sandra','Paul','Ashley','Mark','Donna','Steven','Emily','Kevin','Michelle','Brian','Amanda','George','Melissa','Edward','Deborah','Jason','Stephanie','Jeff','Rebecca','Gary','Laura','Frank','Sharon','Scott','Cynthia','Eric','Angela','Greg','Helen','Raymond','Anna','Larry','Brenda','Dennis','Pamela','Walter','Nicole','Peter','Ruth','Harold','Katherine','Doug','Christine','Henry','Rachel','Carl'];
+const LAST = ['Reyes','Carter','Nguyen','Brooks','Patel','Coleman','Hayes','Rivera','Foster','Bennett','Kim','Ortiz','Wallace','Price','Jenkins','Russell','Morales','Griffin','Hughes','Sanders','Alvarez','Barnes','Fisher','Perry','Powell','Long','Ramos','Simmons','Bryant','Ward','Flores','Butler','Ross','Henderson','Torres','Myers','Gibson','Ellis','Stone','Warren','Mendez','Hart','Lowe','Doyle','Pierce','Shah','Vega','Holt','Frost','Lam'];
+const STREETS = ['Maple Ave','Cedar Ln','Birchwood Dr','Harbor St','Summit Rd','Willow Ct','Ridgeview Dr','Elm St','Lakeview Blvd','Pine Hollow Rd','Juniper Way','Aspen Ct','Chestnut St','Fox Run','Meadow Ln','Oakmont Dr'];
+const SOURCES = ['Website','Referral','Instagram','Google','Client referral','Physician referral'];
+const STAFF = [
+  {id:'U0',first:'Owner',last:'',role:'owner',title:'Business Owner'},
+  {id:'U1',first:'Dana',last:'Whitfield',role:'admin',title:'Operations Manager'},
+  {id:'U2',first:'Luis',last:'Ortega',role:'coordinator',title:'Scheduling Coordinator'},
+  {id:'U3',first:'Mia',last:'Chen',role:'coordinator',title:'Client Success'},
+  {id:'U4',first:'Grace',last:'Okafor',role:'coordinator',title:'Trainer Development'}
+];
+const ROLE_LABEL = {owner:'Business Owner',admin:'Operations Manager',coordinator:'Coordinator'};
+const SECTIONS = [
+  {k:'performance',l:'Performance',n:'Executive dashboard, sales KPIs and reports'},
+  {k:'dispatch',l:'Dispatch & clients',n:'Everyone\'s schedule, the client book and lead matching'},
+  {k:'payroll',l:'Trainer payroll',n:'Everyone\'s pay rates and weekly pay'},
+  {k:'team',l:'Team development',n:'Roster, training progress and every trainer\'s documents'},
+  {k:'work_manager',l:'Runs the work queue',n:'Sees and assigns every ticket'}
+];
+const ROLE_DEFAULTS = {owner:['performance','dispatch','payroll','team','work_manager'],admin:['performance','dispatch','payroll','team','work_manager'],coordinator:['dispatch','team']};
+const MODULES = [
+  {id:'m1',name:'Declara Fitness standards & code of conduct',hrs:1},
+  {id:'m2',name:'In-home session protocol: arrival, setup, sanitizing',hrs:1.5},
+  {id:'m3',name:'Client assessment, PAR-Q+ and medical clearance',hrs:2},
+  {id:'m4',name:'Emergency action plan & incident reports',hrs:1},
+  {id:'m5',name:'Programming with minimal equipment',hrs:2},
+  {id:'m6',name:'Older adults: balance and fall prevention',hrs:1.5},
+  {id:'m7',name:'Using the app: check-ins, notes, cancellations',hrs:.5},
+  {id:'m8',name:'Renewal conversations & referrals',hrs:1},
+  {id:'m9',name:'Two ride-alongs with a senior trainer',hrs:4}
+];
+const KEY = 'declara-fitness-v2';
+const DAY = 86400000;
+const DOW = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+const DOW_FULL = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+const LOOKS = {
+  neon:{name:'Neon',note:'Lime and cyan on graphite, like the gym floor',sw:['#0b0d10','#181c22','#b4ff2e','#22d3ee','#eef2f5']},
+  midnight:{name:'Dark Mode',note:'Calm blues on midnight',sw:['#0b1020','#151c2e','#5b7bff','#8fa6d8','#e9eefb']},
+  blush:{name:'Blush',note:'Soft pink and rose. Train like a boss.',sw:['#f6bfca','#fdf0f2','#d9466b','#c8102e','#2b2226']},
+  declara:{name:'Declara Blue',note:'The light Declara look',sw:['#eefaff','#ffffff','#164fec','#4d60ff','#0d1b3d']},
+  halloween:{name:'Halloween',note:'Limited time, through November 1',sw:['#1c0b33','#2a1245','#f07a12','#6bd13a','#f3e6cf'],season:['09-25','11-01']}
+};
+
+/* ================= utils ================= */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function hash(s){let h=2166136261;for(const c of String(s)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+const pad = n => String(n).padStart(2,'0');
+const ymd = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parse = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y,m-1,d); };
+const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const today0 = () => { const n = new Date(); return new Date(n.getFullYear(),n.getMonth(),n.getDate()); };
+const weekStart = d => addDays(new Date(d.getFullYear(),d.getMonth(),d.getDate()), -((d.getDay()+6)%7));
+const daysUntil = s => Math.round((parse(s) - today0())/DAY);
+const nowMin = () => { const n = new Date(); return n.getHours()*60+n.getMinutes(); };
+const money = n => '$'+Math.round(n).toLocaleString('en-US');
+const moneyK = n => n >= 10000 ? '$'+(n/1000).toFixed(n>=100000?0:1)+'k' : money(n);
+const fmtT = m => { let h = Math.floor(m/60); const mm = m%60; const ap = h>=12?'p':'a'; h = h%12||12; return h+(mm?':'+pad(mm):'')+ap; };
+const fmtTL = m => { let h = Math.floor(m/60); const mm = m%60; const ap = h>=12?'PM':'AM'; h = h%12||12; return h+':'+pad(mm)+' '+ap; };
+const fmtD = (s, o = {month:'short',day:'numeric'}) => parse(s).toLocaleDateString('en-US',o);
+const ago = s => { const d = -daysUntil(s); return d<=0?'Today':d===1?'Yesterday':d+' days ago'; };
+const initials = p => ((p.first||'?')[0]+((p.last||'')[0]||(p.first||'?')[1]||'')).toUpperCase();
+const fullName = p => p ? (p.first+(p.last?' '+p.last:'')) : 'Unknown';
+const avColor = id => `hsl(${hash(id)%360} 70% 72%)`;
+const av = (p, cls='') => `<span class="av ${cls}" style="background:${avColor(p.id)}">${esc(initials(p))}</span>`;
+const inSeason = l => { if (!l.season) return true; const n=new Date(); const md=pad(n.getMonth()+1)+'-'+pad(n.getDate()); const [a,b]=l.season; return a<=b ? md>=a&&md<=b : md>=a||md<=b; };
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function lsDel(k){try{localStorage.removeItem(k)}catch(e){}}
+
+/* ================= data generation ================= */
+function generate(seed){
+  const r = rng(seed), pick = a => a[Math.floor(r()*a.length)], rint = (a,b) => a+Math.floor(r()*(b-a+1));
+  const t0 = today0();
+  const expiry = max => { const x = r(); return ymd(addDays(t0, x<.04 ? -rint(3,60) : x<.11 ? rint(0,30) : rint(31,max))); };
+  const statuses = Array(100).fill('Active');
+  for (let i=0;i<8;i++) statuses[i]='Onboarding';
+  for (let i=8;i<12;i++) statuses[i]='On leave';
+  for (let i=statuses.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[statuses[i],statuses[j]]=[statuses[j],statuses[i]];}
+  const used = new Set(), trainers = [];
+  for (let i=0;i<100;i++){
+    let first,last; do{first=pick(FIRST);last=pick(LAST)}while(used.has(first+last)); used.add(first+last);
+    const s1 = pick(SPECS); let s2; do{s2=pick(SPECS)}while(s2===s1);
+    const status = statuses[i];
+    const training = {}; const doneN = status==='Onboarding' ? rint(1,7) : MODULES.length;
+    MODULES.forEach((m,k) => { training[m.id] = k < doneN; });
+    trainers.push({
+      id:'T'+String(i+1).padStart(3,'0'), first, last, zone:pick(ZONES), specs:[s1,s2], cert:pick(CERTS),
+      certExp:expiry(720), cprExp:expiry(700), bgCheck:ymd(addDays(t0, r()<.04 ? -rint(366,420) : -rint(5,340))), insExp:expiry(360),
+      status, hired:ymd(addDays(t0, status==='Onboarding' ? -rint(2,25) : -rint(60,1900))),
+      rate:rint(40,58), capacity:rint(18,30), radius:rint(8,20), rating:+(4.3+r()*.7).toFixed(1),
+      phone:`(${pick(['404','470','678'])}) 555-01${pad(rint(0,99))}`, training
+    });
+  }
+  const clients = []; let cn = 0;
+  const pkgKeys = ['p10','p10','p10','p20','p20','m8','m8','m8','m12','m12','duo'];
+  for (const t of trainers){
+    const n = t.status==='Active' ? rint(5,9) : t.status==='Onboarding' ? rint(0,2) : 0;
+    for (let k=0;k<n;k++){
+      const pk = pick(pkgKeys);
+      const goalOpts = GOALS.map((g,i)=>i).filter(i => t.specs.includes(GOALS[i].s));
+      const goal = r()<.72 && goalOpts.length ? pick(goalOpts) : Math.floor(r()*GOALS.length);
+      const lapsed = r()<.05, paused = !lapsed && r()<.04;
+      cn++;
+      clients.push({
+        id:'C'+String(cn).padStart(4,'0'), first:pick(CFIRST), last:pick(LAST), zone: r()<.85 ? t.zone : pick(NEIGHBORS[t.zone]),
+        street:`${rint(100,9899)} ${pick(STREETS)}`, trainerId:t.id, pkg:pk, remaining: r()<.08 ? rint(1,2) : rint(3,PACKAGES[pk].size),
+        goal, slot:pick(['Mornings','Mornings','Midday','Evenings','Evenings']), status: paused ? 'Paused' : 'Active', lapsed,
+        since: ymd(addDays(t0,-rint(14,900))), lastSeen: ymd(addDays(t0, lapsed ? -rint(11,32) : -rint(4,8)))
+      });
+    }
+  }
+  const leads = [];
+  for (let i=0;i<9;i++){
+    leads.push({id:'L'+(i+1), first:pick(CFIRST), last:pick(LAST), zone:pick(ZONES), goal:Math.floor(r()*GOALS.length), slot:pick(Object.keys(SLOTS)),
+      pkg:pick(['p10','p20','m8','m12','duo']), source:pick(SOURCES), received:Date.now()-rint(1,70)*3600000,
+      note:pick(['Has dumbbells and a bench at home','Apartment, no equipment','Garage gym','Wants to start next week','Referred by current client','Recovering from knee replacement','Prefers a female trainer','Works from home, flexible'])});
+  }
+  // sales funnel for the month so far
+  const dim = new Date(t0.getFullYear(), t0.getMonth()+1, 0).getDate(); const frac = Math.max(.12, t0.getDate()/dim);
+  const sales = {month: ymd(t0).slice(0,7), bySource:{}};
+  const weights = {Website:46,Referral:22,Instagram:30,Google:34,'Client referral':18,'Physician referral':9};
+  for (const s of SOURCES){ const leadsN = Math.max(2, Math.round(weights[s]*frac*(0.85+r()*.3))); const consults = Math.round(leadsN*(s.includes('referral')||s==='Referral'?.78:.55)); const signed = Math.round(consults*(s.includes('referral')||s==='Referral'?.7:.45)); sales.bySource[s] = {leads:leadsN, consults, signed, pkgRev: signed*rint(700,1100)}; }
+  // work queue
+  const WORK = [
+    ['Client fell during session: file incident report','Compliance','High',0,'U1'],
+    ['Trainer coverage for clients of trainers on leave','Scheduling','High',0,'U2'],
+    ['Client wants to move to evenings','Scheduling','Normal',1,'U2'],
+    ['Refund request for 3 unused sessions','Billing','Normal',2,'U1'],
+    ['Collect signed liability waiver from new client','Client care','High',-1,'U3'],
+    ['Certificate of insurance for condo gym access','Compliance','Normal',3,'U1'],
+    ['Follow up on 2-star review','Client care','High',-2,'U3'],
+    ['Order 10 replacement foam rollers and bands','Equipment','Low',6,'U4'],
+    ['Book CPR/AED class for the onboarding group','Training','Normal',5,'U4'],
+    ['Background check results pending for new hire','HR','Normal',2,'U4'],
+    ['Update price sheet for Partner 10-Packs','Billing','Low',9,'U0'],
+    ['Ride-along: pair new trainer with a senior trainer','Training','Normal',4,'U4'],
+    ['Mileage reimbursement question','Payroll','Low',3,'U1'],
+    ['Drop off adjustable dumbbells at a client\'s home','Equipment','Normal',1,'U2'],
+    ['Send monthly progress reports to Partner-pack clients','Client care','Low',2,'U3'],
+    ['Confirm doctor\'s clearance before a post-rehab client\'s next session','Compliance','High',0,'U3'],
+    ['Quarterly pricing review','Billing','Normal',-3,'U0'],
+    ['Plan the November trainer meetup','HR','Low',12,'U0']
+  ];
+  const work = WORK.map(([name,area,pri,due,who],i) => ({id:'W'+(i+1), name, area, priority:pri, due:ymd(addDays(t0,due)), assignee: who, done: i===16 ? false : r()<.12, created:ymd(addDays(t0,-rint(1,10)))}));
+  // chat
+  const at = (d,h,m) => { const x = addDays(t0,-d); x.setHours(h,m,0,0); return x.getTime(); };
+  const tA = pick(trainers.filter(t=>t.status==='Active')), tB = pick(trainers.filter(t=>t.status==='Active')), tC = pick(trainers.filter(t=>t.status==='Active')), tN = trainers.find(t=>t.status==='Onboarding')||tA;
+  const chat = {
+    general:[
+      {by:'U1', at:at(2,9,12), text:'Reminder: every new client needs a signed waiver and PAR-Q+ before the first session. Please check before you book anyone.'},
+      {by:'U3', at:at(2,9,40), text:'Got it. I pinned the PAR-Q+ in Resources so trainers can send it from their phones.'},
+      {by:'U0', at:at(1,8,15), text:tN.first+' '+tN.last+' started onboarding this week. Grace, please line up two ride-alongs.'},
+      {by:'U4', at:at(1,8,32), text:'On it. Pairing them with '+tA.first+' '+tA.last+' on Thursday and Saturday.'}
+    ],
+    dispatch:[
+      {by:'U2', at:at(0,7,5), text:'Two cancellations in Riverside this afternoon. '+tB.first+' '+tB.last+' can take a 2pm, adding it now.'},
+      {by:'U1', at:at(0,7,21), text:'Thanks Luis. Also check the clients of the trainers on leave. A few have nothing booked next week.'},
+      {by:'U2', at:at(0,8,10), text:tC.first+' '+tC.last+' called in: running 10 minutes late to a 9am because of traffic. Client knows.'}
+    ],
+    trainers:[
+      {by:'U4', at:at(3,12,0), text:'New programming template for older adults is in Training, module 6. I am asking every trainer with senior clients to review it.'},
+      {by:'U0', at:at(1,17,40), text:'Let\'s look at anyone under 40% booked at the Monday meeting. They should get the next leads.'},
+      {by:'U1', at:at(1,18,5), text:'Agreed. I will also flag anyone with expired CPR so we can pull them from dispatch until they renew.'}
+    ],
+    wins:[
+      {by:'U3', at:at(1,15,0), text:tA.first+'\'s client just renewed a 20-pack and referred her sister.'},
+      {by:'U2', at:at(0,9,0), text:tB.first+'\'s post-rehab client walked a full mile without the cane today.'},
+      {by:'U0', at:at(0,9,20), text:'That is why we do this. Please pass it on to the team.'}
+    ]
+  };
+  const st = {v:2, seed, biz:'Peak Home Training Co.', ownerName:'', look:'neon', trainers, clients, leads, sales, work, chat, ticks:{},
+    access:{}, sessions:[], weekStart:'', history:[], nextId:{c:cn+1,t:101,l:10,s:1,w:WORK.length+1}};
+  buildWeek(st);
+  return st;
+}
+
+function buildWeek(st){
+  const ws = weekStart(new Date());
+  st.weekStart = ymd(ws);
+  const r = rng(st.seed + hash(st.weekStart));
+  const rint = (a,b) => a+Math.floor(r()*(b-a+1));
+  const tById = Object.fromEntries(st.trainers.map(t=>[t.id,t]));
+  const busy = {}; const out = [];
+  const tIdx = Math.round((today0()-ws)/DAY); const nm = nowMin();
+  const patterns = {m12:[[0,2,4],[1,3,5]], m8:[[0,3],[1,4],[2,5],[0,2]]};
+  for (const c of st.clients){
+    const t = tById[c.trainerId];
+    if (!t || t.status==='On leave' || c.status!=='Active' || c.lapsed) continue;
+    const per = {p10:r()<.5?1:2, p20:2, m8:2, m12:3, duo:1}[c.pkg] || 1;
+    let days;
+    if (patterns[c.pkg]) { const p = patterns[c.pkg]; days = p[Math.floor(r()*p.length)]; }
+    else { const pool=[0,1,2,3,4,5,6].filter(d => d<6 || r()<.3); days=[]; while(days.length<per && pool.length){ days.push(pool.splice(Math.floor(r()*pool.length),1)[0]); } }
+    const [lo,hi] = SLOTS[c.slot];
+    const goalSpec = GOALS[c.goal].s; const type = t.specs.includes(goalSpec) ? goalSpec : t.specs[0];
+    for (const d of days){
+      const date = ymd(addDays(ws,d)); const list = busy[t.id+'|'+date] || (busy[t.id+'|'+date]=[]);
+      let start = lo + 30*rint(0,(hi-lo)/30), ok = false;
+      for (let tries=0; tries<10; tries++){
+        if (start>=360 && start<=1200 && !list.some(([a,b]) => start < b+30 && start+60 > a-30)) { ok = true; break; }
+        start = lo + 30*rint(0,(hi-lo)/30) + (tries>4 ? (r()<.5?-120:120) : 0);
+      }
+      if (!ok) continue;
+      list.push([start,start+60]);
+      let status = 'Scheduled';
+      if (d < tIdx || (d===tIdx && start+60 <= nm)){ const x=r(); status = x<.92?'Completed':x<.97?'Cancelled':'No-show'; }
+      else if (r()<.03) status = 'Cancelled';
+      out.push({id:'S'+(st.nextId.s++), trainerId:t.id, clientId:c.id, date, start, dur:60, type, status});
+    }
+  }
+  st.sessions = out;
+  const cur = out.filter(s=>s.status!=='Cancelled').reduce((a,s)=>a+sessionRevenue(s, st),0);
+  st.history = [];
+  for (let i=11;i>=1;i--) st.history.push({week:ymd(addDays(ws,-7*i)), rev:Math.round(cur*(1 - i*0.018 + (r()-.5)*.05))});
+}
+
+/* ================= state ================= */
+let S;
+function load(){
+  const raw = lsGet(KEY);
+  if (raw){ try { S = JSON.parse(raw); } catch(e){ S = null; } }
+  if (!S || S.v!==2 || !Array.isArray(S.trainers)) S = generate(20261001);
+  if (S.weekStart !== ymd(weekStart(new Date()))) buildWeek(S);
+  if (S.sales.month !== ymd(today0()).slice(0,7)) { const g = generate(S.seed); S.sales = g.sales; }
+  save();
+}
+function save(){ lsSet(KEY, JSON.stringify(S)); }
+const T = id => S.trainers.find(t=>t.id===id);
+const C = id => S.clients.find(c=>c.id===id);
+const P = id => T(id) || STAFF.find(u=>u.id===id) && Object.assign({}, STAFF.find(u=>u.id===id), id==='U0'&&S.ownerName ? splitName(S.ownerName) : {});
+function splitName(n){ const p = n.trim().split(/\s+/); return {first:p[0]||'Owner', last:p.slice(1).join(' ')}; }
+function sessionRevenue(s, st=S){ const c = st.clients.find(x=>x.id===s.clientId); return c ? PACKAGES[c.pkg].per : 80; }
+function dayIndex(s){ return Math.round((parse(s.date)-parse(S.weekStart))/DAY); }
+function todayIdx(){ return Math.round((today0()-parse(S.weekStart))/DAY); }
+function live(s){
+  if (s.status==='Cancelled' || s.status==='No-show' || s.status==='Completed') return s.status;
+  const d = dayIndex(s), ti = todayIdx(), nm = nowMin();
+  if (d < ti || (d===ti && s.start+s.dur <= nm)) return 'Completed';
+  if (d===ti && s.start <= nm) return 'In progress';
+  return 'Scheduled';
+}
+const STATUS_PILL = {'Completed':'ok','Scheduled':'info','In progress':'live','Cancelled':'mute','No-show':'bad'};
+const billable = s => live(s)!=='Cancelled';
+
+function stats(){
+  const byT = {}; for (const t of S.trainers) byT[t.id] = {booked:0,done:0,noshow:0,cx:0,rev:0,clients:0};
+  for (const s of S.sessions){ const b = byT[s.trainerId]; if (!b) continue; const L = live(s);
+    if (L!=='Cancelled'){ b.booked++; b.rev += sessionRevenue(s); } else b.cx++;
+    if (L==='Completed') b.done++; if (L==='No-show') b.noshow++; }
+  for (const c of S.clients) if (c.trainerId && byT[c.trainerId] && c.status==='Active') byT[c.trainerId].clients++;
+  return byT;
+}
+function util(t, st){ return t.capacity ? Math.min(1.5, st[t.id].booked / t.capacity) : 0; }
+function compItems(t){
+  return [
+    {k:'cert', label:t.cert, exp:t.certExp},
+    {k:'cpr', label:'CPR / AED', exp:t.cprExp},
+    {k:'bg', label:'Background check', exp:ymd(addDays(parse(t.bgCheck),365))},
+    {k:'ins', label:'Liability insurance', exp:t.insExp}
+  ].map(x => { const d = daysUntil(x.exp); return {...x, days:d, state: d<0?'bad':d<=30?'warn':'ok'}; });
+}
+function compWorst(t){ const it = compItems(t); return it.some(x=>x.state==='bad')?'bad':it.some(x=>x.state==='warn')?'warn':'ok'; }
+function lastSession(c){ let best = c.lastSeen; for (const s of S.sessions) if (s.clientId===c.id && live(s)==='Completed' && s.date > best) best = s.date; return best; }
+function nextSession(c){ return S.sessions.filter(s=>s.clientId===c.id && ['Scheduled','In progress'].includes(live(s))).sort((a,b)=>a.date.localeCompare(b.date)||a.start-b.start)[0]; }
+function clientState(c){
+  if (c.status==='Paused') return 'Paused';
+  if (!c.trainerId) return 'Unassigned';
+  if (-daysUntil(lastSession(c)) >= 10 && !nextSession(c)) return 'At risk';
+  if (c.remaining <= 2) return 'Renew soon';
+  return 'Active';
+}
+const CLIENT_PILL = {'Active':'ok','At risk':'bad','Renew soon':'warn','Paused':'mute','Unassigned':'info'};
+const TRAINER_PILL = {'Active':'ok','Onboarding':'info','On leave':'mute'};
+const trainingPct = t => Math.round(MODULES.filter(m=>t.training?.[m.id]).length / MODULES.length * 100);
+
+/* ================= who is signed in (Declara's roles & access) ================= */
+let asId = 'U0';
+function me(){ return P(asId); }
+function role(){ return STAFF.find(u=>u.id===asId).role; }
+function can(k){ const r = role(); if (r==='owner'||r==='admin') return true; const a = S.access[asId]; return a && k in a ? !!a[k] : ROLE_DEFAULTS[r].includes(k); }
+
+function attention(){
+  const items = [];
+  const comp = {bad:0,warn:0}; for (const t of S.trainers) for (const x of compItems(t)) if (x.state!=='ok') comp[x.state]++;
+  const ins = S.trainers.filter(t => daysUntil(t.insExp) <= 30).length;
+  const cs = S.clients.map(clientState);
+  const risk = cs.filter(x=>x==='At risk').length, renew = cs.filter(x=>x==='Renew soon').length, un = cs.filter(x=>x==='Unassigned').length;
+  const overdue = S.work.filter(w=>!w.done && daysUntil(w.due)<0).length;
+  const st = stats();
+  const over = S.trainers.filter(t => t.status==='Active' && util(t,st) > 1).length;
+  const under = S.trainers.filter(t => t.status==='Active' && util(t,st) < .4).length;
+  if (comp.bad) items.push({n:comp.bad, s:'bad', t:'Expired credentials', d:'Do not dispatch these trainers until renewed', go:'#compliance'});
+  if (risk) items.push({n:risk, s:'bad', t:'Clients at risk', d:'No session in 10+ days and nothing booked', go:'#clients', f:'At risk'});
+  if (overdue) items.push({n:overdue, s:'bad', t:'Overdue tickets', d:'Past their due date in Work & Tickets', go:'#work'});
+  if (S.leads.length) items.push({n:S.leads.length, s:'warn', t:'New leads waiting', d:'Match each one with a trainer near them', go:'#leads'});
+  if (comp.warn) items.push({n:comp.warn, s:'warn', t:'Credentials expiring in 30 days', d:ins+' trainers have liability insurance due', go:'#compliance'});
+  if (un) items.push({n:un, s:'warn', t:'Clients without a trainer', d:'Reassign from the client profile', go:'#clients', f:'Unassigned'});
+  if (renew) items.push({n:renew, s:'info', t:'Packages ending soon', d:'2 or fewer sessions left. Time to renew.', go:'#clients', f:'Renew soon'});
+  if (over) items.push({n:over, s:'info', t:'Trainers over capacity', d:'Booked past their weekly session limit', go:'#trainers', sort:'util'});
+  if (under) items.push({n:under, s:'info', t:'Trainers under 40% booked', d:'Good fits for new leads', go:'#trainers', sort:'utilAsc'});
+  return items;
+}
+
+/* ================= icons ================= */
+const ic = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const I = {
+  today:ic('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
+  work:ic('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="m8 12 2.5 2.5L16 9"/>'),
+  chat:ic('<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/>'),
+  pay:ic('<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/>'),
+  dash:ic('<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/>'),
+  sales:ic('<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-7"/>'),
+  reports:ic('<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>'),
+  schedule:ic('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'),
+  clients:ic('<circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6M17 4a4 4 0 0 1 0 8M22 21c0-3-1.5-5-4-5.6"/>'),
+  leads:ic('<circle cx="10" cy="8" r="4"/><path d="M3 21c0-4 3-6 7-6 1.3 0 2.5.2 3.5.6M19 14v6M16 17h6"/>'),
+  resources:ic('<path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2Zm0 0A2 2 0 0 0 6 22h14"/>'),
+  trainers:ic('<path d="M6.5 6.5v11M17.5 6.5v11M3 9v6M21 9v6M6.5 12h11"/>'),
+  training:ic('<path d="m2 9 10-5 10 5-10 5Z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/>'),
+  compliance:ic('<path d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5l-8-3Z"/><path d="m9 12 2 2 4-4"/>'),
+  settings:ic('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>'),
+  dollar:ic('<path d="M12 2v20M17 6.5C16 5 14.3 4.5 12 4.5c-2.8 0-5 1.3-5 3.7 0 5 10 2.6 10 7.6 0 2.4-2.2 3.7-5 3.7-2.6 0-4.4-.8-5.3-2.5"/>'),
+  star:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.6 7 .8-5.2 4.8 1.5 7L12 17.6 5.7 21.2l1.5-7L2 9.4l7-.8L12 2Z"/></svg>',
+  fire:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2s6 5 6 11a6 6 0 0 1-12 0c0-2.5 1.2-4.3 1.2-4.3s.6 2.8 2.8 2.8C9.6 8 12 2 12 2Z"/></svg>',
+  chev:ic('<path d="m9 6 6 6-6 6"/>'),
+  x:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>'
+};
+
+/* ================= routing & nav (Declara's four sections) ================= */
+const VIEWS = {
+  today:{label:()=>!S.ownerName?'My Space':S.ownerName.split(' ')[0]+'’s Space', title:'My <em>Space</em>', icon:I.today, show:()=>true},
+  work:{label:()=>'Work & Tickets', title:'Work & <em>Tickets</em>', icon:I.work, show:()=>true},
+  chat:{label:()=>'Team Chat', title:'Team <em>Chat</em>', icon:I.chat, show:()=>true},
+  dashboard:{label:()=>'Executive Dashboard', title:'Fitness <em>Dashboard</em>', icon:I.dash, show:()=>can('performance')},
+  sales:{label:()=>'Sales KPIs', title:'Sales <em>KPIs</em>', icon:I.sales, show:()=>can('performance')},
+  reports:{label:()=>'Reports', title:'<em>Reports</em>', icon:I.reports, show:()=>can('performance')},
+  schedule:{label:()=>'Dispatch Schedule', title:'<em>Dispatch</em> Schedule', icon:I.schedule, show:()=>can('dispatch')},
+  clients:{label:()=>'Client Book', title:'<em>Client</em> Book', icon:I.clients, show:()=>can('dispatch')},
+  leads:{label:()=>'Leads & Matching', title:'Lead <em>Matching</em>', icon:I.leads, show:()=>can('dispatch')},
+  payroll:{label:()=>'Trainer Payroll', title:'Trainer <em>Payroll</em>', icon:I.pay, show:()=>can('payroll')},
+  resources:{label:()=>'Resources', title:'Business <em>Resources</em>', icon:I.resources, show:()=>true},
+  trainers:{label:()=>'Trainer Roster', title:'<em>Trainer</em> Roster', icon:I.trainers, show:()=>can('team')},
+  training:{label:()=>'Training', title:'<em>Training</em>', icon:I.training, show:()=>true},
+  compliance:{label:()=>'Certifications & Insurance', title:'<em>Certifications</em> & Insurance', icon:I.compliance, show:()=>true},
+  settings:{label:()=>'Settings', title:'<em>Settings</em>', icon:I.settings, show:()=>true}
+};
+const NAV = [
+  {h:'Workspace', items:['today','work','chat']},
+  {h:'Performance', items:['dashboard','sales','reports']},
+  {h:'Business Management', items:['schedule','clients','leads','payroll','resources']},
+  {h:'Team Development', items:['trainers','training','compliance']},
+  {h:'', items:['settings']}
+];
+const ui = Object.assign({
+  tQ:'', tZone:'', tSpec:'', tStatus:'', tSort:'name',
+  cQ:'', cZone:'', cState:'', cTrainer:'', cLimit:80,
+  day:null, mode:'board', sZone:'', sQ:'', sTrainer:'',
+  compIssues:true, compQ:'', openLead:null, wQ:'', wArea:'', wShow:'open', chan:'general', resTab:'forms', repTab:'zones', trTab:'onboarding'
+}, (() => { try { return JSON.parse(lsGet(KEY+'-ui')||'{}'); } catch(e){ return {}; } })());
+ui.cLimit = 80; ui.openLead = null;
+const saveUi = () => lsSet(KEY+'-ui', JSON.stringify(ui));
+const home = () => can('performance') ? 'dashboard' : 'today';
+function currentView(){ const h = location.hash.slice(1); return VIEWS[h] && VIEWS[h].show() ? h : home(); }
+
+function applyLook(){ const l = LOOKS[S.look] && inSeason(LOOKS[S.look]) ? S.look : 'neon'; document.documentElement.setAttribute('data-look', l); }
+function renderShell(){
+  const v = currentView();
+  $('#nav').innerHTML = NAV.map(sec => { const items = sec.items.filter(k=>VIEWS[k].show()); if (!items.length) return '';
+    return (sec.h?`<div class="nav-h">${sec.h}</div>`:'<div style="height:10px"></div>') + items.map(k =>
+      `<a href="#${k}" class="${k===v?'on':''}">${VIEWS[k].icon}<span>${esc(VIEWS[k].label())}</span>${k==='leads'&&S.leads.length?`<span class="badge">${S.leads.length}</span>`:''}${k==='work'?(()=>{const n=myWork().filter(w=>!w.done).length;return n?`<span class="badge">${n}</span>`:''})():''}</a>`).join(''); }).join('');
+  $('#pageTitle').innerHTML = VIEWS[v].title;
+  $('#bizName').textContent = S.biz;
+  const ti = todayIdx(); const todays = S.sessions.filter(s=>dayIndex(s)===ti && billable(s));
+  const ip = todays.filter(s=>live(s)==='In progress').length;
+  $('#sideLive').innerHTML = `Today: <b>${todays.length}</b> in-home sessions<br><b>${ip}</b> trainers in a client's home now`;
+  const n = attention().filter(a=>a.s!=='info').reduce((a,x)=>a+x.n,0);
+  const bc = $('#bellCount'); bc.hidden = !n; bc.textContent = n>99?'99+':n;
+  const u = me();
+  $('#me').innerHTML = `<button data-act="menu" aria-label="Account menu">${av(u)}<span class="un"><b>${esc(fullName(u))}</b><em>${esc(u.title)}</em></span></button>`;
+}
+function render(){
+  applyLook(); renderShell();
+  const v = currentView();
+  const banner = asId!=='U0' ? `<div class="preview">Previewing Declara Fitness as <b>${esc(fullName(me()))}</b> (${esc(me().title)}). They only see the sections switched on for them in Settings.<button class="btn sm" data-act="viewAs" data-id="U0">Back to owner view</button></div>` : '';
+  $('#view').innerHTML = banner + ({today:vToday, work:vWork, chat:vChat, dashboard:vDash, sales:vSales, reports:vReports, schedule:vSchedule, clients:vClients, leads:vLeads, payroll:vPayroll, resources:vResources, trainers:vTrainers, training:vTraining, compliance:vCompliance, settings:vSettings})[v]();
+  if (v==='chat'){ const s = $('.stream'); if (s) s.scrollTop = s.scrollHeight; }
+}
+function tick(){ const n = new Date(); $('#clock').textContent = n.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}).toUpperCase()+'  |  '+n.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); }
+const head = (kicker, title, sub, right='') => `<div class="page-head"><div><div class="kicker">${kicker}</div><h2>${title}</h2>${sub?`<p>${sub}</p>`:''}</div>${right?`<div class="right">${right}</div>`:''}</div>`;
+const opt = (arr, cur, all) => `<option value="">${all}</option>`+arr.map(x=>`<option ${x===cur?'selected':''}>${esc(x)}</option>`).join('');
+const stat = (label, val, sub, tone='') => `<div class="stat ${tone}"><small>${label}</small><b class="num">${val}</b><span>${sub||''}</span></div>`;
+
+/* ================= Workspace: My Space ================= */
+const CHECKS = {
+  office:[['c1','Review today\'s dispatch board for gaps','Scheduling · 8:00 AM'],['c2','Reply to new leads within 2 hours','Sales · all day'],['c3','Call clients with 2 or fewer sessions left','Renewals'],['c4','Confirm tomorrow\'s first sessions','Scheduling · 4:00 PM'],['c5','Check expiring certifications and insurance','Compliance'],['c6','Approve trainer swap requests','Scheduling']],
+  trainer:[['k1','Pack your kit and sanitize equipment','Before first visit'],['k2','Read client notes before each visit','Every session'],['k3','Text your client 30 minutes before arriving','Every session'],['k4','Log every session in the app','Same day'],['k5','Update progress measurements','Weekly']]
+};
+function ticks(){ const k = asId+'|'+ymd(today0()); return new Set(S.ticks[k]||[]); }
+function myWork(){ return S.work.filter(w => can('work_manager') ? true : w.assignee===asId); }
+function vToday(){
+  const date = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  const list = CHECKS.office; const done = ticks(); const pct = Math.round([...done].filter(x=>list.some(l=>l[0]===x)).length/list.length*100);
+  const checklist = `<section class="panel c5"><div class="panel-h"><h2>Daily checklist</h2><span class="meta">Your ticks reset each morning.</span></div>
+    <div class="prog"><span class="num">${list.filter(l=>done.has(l[0])).length} of ${list.length}</span><div class="bar"><i style="width:${pct}%"></i></div><span class="num">${pct}%</span></div>
+    <div class="checks">${list.map(([id,t,s])=>`<label class="check ${done.has(id)?'done':''}" for="ck_${id}"><input type="checkbox" id="ck_${id}" data-tick="${id}" ${done.has(id)?'checked':''}><span>${esc(t)}<small>${esc(s)}</small></span></label>`).join('')}</div></section>`;
+  const mineOpen = S.work.filter(w=>!w.done && w.assignee===asId).sort((a,b)=>a.due.localeCompare(b.due));
+  const workPanel = `<section class="panel c7"><div class="panel-h"><h2>My open work</h2><span class="meta">Tickets assigned to you</span><div class="right"><a class="btn sm" href="#work">Open the queue</a></div></div>
+    ${mineOpen.length?`<div class="list">${mineOpen.slice(0,8).map(w=>workLine(w)).join('')}</div>`:'<div class="empty">Nothing assigned to you.</div>'}</section>`;
+  const ti = todayIdx(); const todays = S.sessions.filter(s=>dayIndex(s)===ti && billable(s));
+  const overdue = myWork().filter(w=>!w.done && daysUntil(w.due)<0);
+  const renew = S.clients.filter(c=>clientState(c)==='Renew soon');
+  const tiles = `<section class="tiles">${tile('var(--lime)','Checklist',I.work,`${list.filter(l=>done.has(l[0])).length}<small>/${list.length}</small>`,`${pct}% done today`)}${tile('var(--lime)','My Open<br>Work',I.today,mineOpen.length,'assigned to you')}${tile(overdue.length?'var(--bad)':'var(--lime)','Overdue<br>(Team)',I.fire,overdue.length,overdue.length?'past due date':'nothing past due')}${tile('var(--cyan)','Sessions<br>Today',I.schedule,todays.length,`${todays.filter(s=>live(s)==='In progress').length} happening now`)}${tile('var(--lime)','New<br>Leads',I.leads,S.leads.length,'waiting for a trainer')}</section>`;
+  const renewPanel = `<section class="panel c12"><div class="panel-h"><h2>Packages ending soon</h2><span class="meta">2 or fewer sessions left. A renewal call now keeps the client.</span><div class="right"><a class="btn sm" href="#clients" data-act="go" data-f="Renew soon">All renewals</a></div></div>
+    ${renew.length?`<div class="tablewrap"><table><thead><tr><th>Client</th><th>Trainer</th><th>Package</th><th class="r">Left</th><th>Next session</th></tr></thead><tbody>${renew.slice(0,8).map(c=>{const nx=nextSession(c);return `<tr data-act="client" data-id="${c.id}"><td><div class="who">${av(c)}<div><b>${esc(fullName(c))}</b><small>${esc(c.zone)}</small></div></div></td><td>${esc(fullName(T(c.trainerId)))}</td><td>${esc(PACKAGES[c.pkg].short)}</td><td class="r num">${c.remaining}</td><td>${nx?DOW[dayIndex(nx)]+' '+fmtT(nx.start):'<span class="muted">Not booked</span>'}</td></tr>`;}).join('')}</tbody></table></div>`:'<div class="empty">No packages ending soon.</div>'}</section>`;
+  return head(`${S.ownerName?esc(S.ownerName.split(' ')[0])+'’s':'My'} space`, date, '') + tiles + `<div class="grid">${checklist}${workPanel}${renewPanel}</div>`;
+}
+
+/* ================= Workspace: Work & Tickets ================= */
+const AREAS = ['Scheduling','Client care','Billing','Compliance','Equipment','Training','HR','Payroll'];
+const PRI_PILL = {High:'bad',Normal:'info',Low:'mute'};
+function workLine(w){
+  const d = daysUntil(w.due);
+  return `<div><input type="checkbox" data-done="${w.id}" ${w.done?'checked':''} aria-label="Mark done" style="width:18px;height:18px;accent-color:var(--lime)"><span style="min-width:0"><b style="${w.done?'text-decoration:line-through;color:var(--muted)':''}">${esc(w.name)}</b><br><small>${esc(w.area)} · ${esc(fullName(P(w.assignee)))}</small></span><span class="end"><span class="pill ${PRI_PILL[w.priority]}">${w.priority}</span><small class="num" style="color:${!w.done&&d<0?'var(--bad)':'var(--muted)'}">${d===0?'Today':d===1?'Tomorrow':d<0?Math.abs(d)+'d late':fmtD(w.due)}</small></span></div>`;
+}
+function vWork(){
+  const mgr = can('work_manager'); const all = myWork();
+  const open = all.filter(w=>!w.done), overdue = open.filter(w=>daysUntil(w.due)<0), dueToday = open.filter(w=>daysUntil(w.due)===0);
+  return head('Operations', mgr?'Work queue':'My work', mgr?'Every ticket for the office. Assign to anyone on the team.':'Tickets assigned to you. Tick one off when it is done.', `<button class="btn primary" data-act="addWork">+ New ticket</button>`) +
+  `<div class="strip">${stat('Open',open.length,`across ${new Set(open.map(w=>w.area)).size} areas`)}${stat('Overdue',overdue.length,overdue.length?'past due':'nothing past due',overdue.length?'bad':'good')}${stat('Due today',dueToday.length,'')}${stat('Completed',all.length-open.length,`of ${all.length} tickets`)}</div>
+  <section class="panel"><div class="toolbar">
+    <input type="search" id="wQ" data-f="wQ" placeholder="Search tickets" value="${esc(ui.wQ)}" aria-label="Search tickets">
+    <select id="wArea" data-f="wArea" aria-label="Area">${opt(AREAS,ui.wArea,'All areas')}</select>
+    <div class="seg">${[['open','Open'],['done','Done'],['all','All']].map(([k,l])=>`<button class="${ui.wShow===k?'on':''}" data-act="wShow" data-v="${k}">${l}</button>`).join('')}</div>
+  </div></section><div id="results">${workRows()}</div>`;
+}
+function workRows(){
+  const q = ui.wQ.trim().toLowerCase();
+  const list = myWork().filter(w=>(ui.wShow==='all'||(ui.wShow==='done')===w.done) && (!ui.wArea||w.area===ui.wArea) && (!q||(w.name+' '+fullName(P(w.assignee))).toLowerCase().includes(q)))
+    .sort((a,b)=>a.done-b.done||a.due.localeCompare(b.due)||({High:0,Normal:1,Low:2}[a.priority]-{High:0,Normal:1,Low:2}[b.priority]));
+  return list.length ? `<div class="list" style="background:var(--panel)">${list.map(workLine).join('')}</div>` : '<div class="panel empty">No tickets here.</div>';
+}
+
+/* ================= Workspace: Team Chat ================= */
+const CHANNELS = {general:'Anything for the office team',dispatch:'Coverage gaps, cancellations and swaps',trainers:'Trainer performance, hiring and coaching notes',wins:'Client wins and shout-outs to pass on'};
+function vChat(){
+  const ch = CHANNELS[ui.chan] ? ui.chan : 'general'; const msgs = S.chat[ch] || [];
+  return head('Team','Team chat','Private to the five people on the account. Trainers are not in this chat.') + `<div class="chat">
+    <div class="chans"><h3>Channels</h3>${Object.keys(CHANNELS).map(k=>`<button class="${k===ch?'on':''}" data-act="chan" data-v="${k}"># ${k}<small class="num">${(S.chat[k]||[]).length}</small></button>`).join('')}</div>
+    <div class="msgs"><div class="msgs-h"><b># ${ch}</b><small>${CHANNELS[ch]}</small></div>
+      <div class="stream">${msgs.map(m=>{const p=P(m.by)||{id:m.by,first:'?',last:''};const d=new Date(m.at);return `<div class="msg">${av(p)}<div><b>${esc(fullName(p))}</b><time>${d.toDateString()===new Date().toDateString()?'Today':d.toLocaleDateString('en-US',{weekday:'short'})} ${d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}</time><p>${esc(m.text)}</p></div></div>`;}).join('')||'<div class="empty">No messages yet.</div>'}</div>
+      <form class="composer" id="chatForm"><input class="fld" id="chatText" name="chatText" placeholder="Message #${ch}" autocomplete="off" aria-label="Message"><button class="btn primary" type="submit">Send</button></form>
+    </div></div>`;
+}
+
+/* ================= Performance: Executive Dashboard ================= */
+function tile(c, label, icon, val, sub){
+  return `<div class="tile-wrap" style="--c:${c}"><div class="tile-frame"><div class="tile"><div class="lbl">${label}</div>${icon}<div class="val num">${val}</div><div class="sub">${sub}</div></div></div></div>`;
+}
+function vDash(){
+  const st = stats(); const act = S.trainers.filter(t=>t.status==='Active');
+  const onb = S.trainers.filter(t=>t.status==='Onboarding').length, lv = S.trainers.filter(t=>t.status==='On leave').length;
+  const wk = S.sessions.filter(billable); const done = S.sessions.filter(s=>live(s)==='Completed').length;
+  const rev = wk.reduce((a,s)=>a+sessionRevenue(s),0);
+  const last = S.history[S.history.length-1]?.rev || rev; const delta = (rev-last)/last*100;
+  const activeClients = S.clients.filter(c=>c.status==='Active' && c.trainerId).length;
+  const working = S.trainers.filter(t=>t.status!=='On leave');
+  const rating = working.reduce((a,t)=>a+t.rating,0)/working.length;
+  const totalCap = act.reduce((a,t)=>a+t.capacity,0), totalBooked = act.reduce((a,t)=>a+st[t.id].booked,0);
+  const tiles = `<section class="tiles">
+    ${tile('var(--lime)','Active<br>Trainers',I.trainers,`${act.length}<small>/${S.trainers.length}</small>`,`${onb} onboarding · ${lv} on leave`)}
+    ${tile('var(--lime)','Sessions<br>This Week',I.dash,wk.length,`<b>${done}</b> completed so far`)}
+    ${tile('var(--cyan)','Booked<br>Revenue',I.dollar,moneyK(rev),`<b>${delta>=0?'+':''}${delta.toFixed(1)}%</b> vs last week`)}
+    ${tile('var(--lime)','Active<br>Clients',I.clients,activeClients,`${(activeClients/Math.max(1,act.length)).toFixed(1)} per active trainer`)}
+    ${tile('var(--lime)','Team<br>Rating',I.star,rating.toFixed(2),`<b>${Math.round(totalBooked/totalCap*100)}%</b> of capacity booked`)}
+  </section>`;
+  const ti = todayIdx(), nm = nowMin();
+  const todays = S.sessions.filter(s=>dayIndex(s)===ti).sort((a,b)=>a.start-b.start);
+  const ip = todays.filter(s=>live(s)==='In progress'), up = todays.filter(s=>live(s)==='Scheduled'), dn = todays.filter(s=>live(s)==='Completed'), cx = todays.filter(s=>['Cancelled','No-show'].includes(live(s)));
+  const feed = [...ip, ...up].slice(0,40);
+  const hours = Array.from({length:15},(_,i)=>6+i); const perH = hours.map(h=>todays.filter(s=>billable(s)&&Math.floor(s.start/60)===h).length);
+  const todayPanel = `<section class="panel c7">
+    <div class="panel-h"><h2>Today in the field</h2><span class="meta">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</span><div class="right"><a class="btn sm" href="#schedule" data-act="schedToday">Open dispatch board</a></div></div>
+    <div class="livestats">
+      <div><b class="num" style="color:var(--lime)">${ip.length}</b><small>In a home now</small></div>
+      <div><b class="num">${up.length}</b><small>Still to come</small></div>
+      <div><b class="num">${dn.length}</b><small>Completed</small></div>
+      <div><b class="num" style="color:${cx.length?'var(--bad)':'inherit'}">${cx.length}</b><small>Cancelled / no-show</small></div>
+    </div>
+    ${hourChart(hours, perH, nm)}
+    <div class="feed" style="margin-top:12px">${feed.length ? feed.map(s => { const t=T(s.trainerId), c=C(s.clientId); return `<button data-act="session" data-id="${s.id}"><span class="t num">${fmtT(s.start)}</span><span class="w"><b>${esc(fullName(t))}</b> <small>→ ${esc(fullName(c))} · ${esc(c.street)}, ${esc(c.zone)}</small></span><span class="pill ${STATUS_PILL[live(s)]}">${live(s)}</span></button>`; }).join('') : '<div class="empty">No more sessions today. Tomorrow\'s schedule is on the dispatch board.</div>'}</div>
+  </section>`;
+  const al = attention();
+  const attn = `<section class="panel c5" id="attention"><div class="panel-h"><h2>Needs attention</h2><span class="meta">${al.length} items</span></div>
+    <div class="alerts">${al.length ? al.map(a=>`<a class="alert" href="${a.go}" data-act="go" data-f="${esc(a.f||'')}" data-sort="${esc(a.sort||'')}" style="--s:var(--${a.s==='info'?'cyan':a.s})"><b class="num">${a.n}</b><div><strong>${a.t}</strong><small>${a.d}</small></div>${I.chev}</a>`).join('') : '<div class="empty">All clear. Nothing needs you right now.</div>'}</div></section>`;
+  const series = [...S.history.map(h=>({w:h.week,v:h.rev})), {w:S.weekStart, v:rev, cur:true}];
+  const revPanel = `<section class="panel c5"><div class="panel-h"><h2>Booked revenue</h2><span class="meta">Last 12 weeks</span></div>${revChart(series)}</section>`;
+  const ranked = act.map(t=>({t, done:st[t.id].done, booked:st[t.id].booked})).sort((a,b)=>b.done-a.done||b.booked-a.booked||b.t.rating-a.t.rating).slice(0,6);
+  const lb = `<section class="panel c4"><div class="panel-h"><h2>Top trainers</h2><span class="meta">Completed this week</span></div>
+    <div class="lb">${ranked.map((x,i)=>`<button data-act="trainer" data-id="${x.t.id}"><span class="rk">${i+1}</span>${av(x.t)}<span class="nm"><b>${esc(fullName(x.t))}</b><small>${esc(x.t.zone)} · ${x.t.rating.toFixed(1)}★</small></span><span class="sc num">${x.done}<small>of ${x.booked} booked</small></span></button>`).join('')}</div></section>`;
+  const zones = ZONES.map(z => ({z, t:S.trainers.filter(t=>t.zone===z && t.status!=='On leave').length, c:S.clients.filter(c=>c.zone===z && c.status==='Active').length}));
+  const maxZ = Math.max(...zones.map(x=>x.c+x.t*4));
+  const zonePanel = `<section class="panel c3"><div class="panel-h"><h2>Coverage by zone</h2></div>
+    <div class="hbars">${zones.map(x=>`<div class="hbar" style="grid-template-columns:96px minmax(0,1fr) 64px"><span>${esc(x.z)}</span><span class="track" title="${x.t} trainers, ${x.c} clients"><i style="width:${x.t*4/maxZ*100}%;background:var(--lime)"></i><i style="width:${x.c/maxZ*100}%;background:var(--cyan);opacity:.75"></i></span><span class="v num"><b>${x.t}</b> : ${x.c}${x.t&&x.c/x.t>9?' <span class="dot warn" title="More than 9 clients per trainer"></span>':''}</span></div>`).join('')}</div>
+    <p class="note" style="margin-top:12px"><span class="dot" style="background:var(--lime)"></span> trainers · <span class="dot" style="background:var(--cyan)"></span> clients. Amber dot: more than 9 clients per trainer.</p></section>`;
+  const star = ranked[0];
+  const banner = `<section class="c12 banner"><svg class="bolt" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>
+    ${S.look==='blush'?'<div class="big">Train like a boss</div><div class="tag">Stay strong · Show up for every client</div>':'<div class="big">Crush your goals!</div><div class="tag">Stay consistent · Show up for every client</div>'}
+    ${star ? `<div class="spot">${av(star.t)}<div><small>Trainer of the week</small><b>${esc(fullName(star.t))}</b> · ${star.done} sessions done · ${star.t.rating.toFixed(1)}★ · ${esc(star.t.zone)}</div></div>` : ''}</section>`;
+  return tiles + `<div class="grid">${todayPanel}${attn}${revPanel}${lb}${zonePanel}${banner}</div>`;
+}
+function hourChart(hours, vals, nm){
+  const W=640,H=120,pl=26,pb=20,pt=8; const max=Math.max(4,...vals); const step=Math.ceil(max/4/2)*2||1; const top=step*4;
+  const bw=(W-pl)/hours.length, y=v=>pt+(H-pt-pb)*(1-v/top);
+  let g=''; for(let v=0;v<=top;v+=step) g+=`<line x1="${pl}" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${pl-6}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="var(--muted)">${v}</text>`;
+  const cur=Math.floor(nm/60);
+  const bars=hours.map((h,i)=>{ const x=pl+i*bw+bw*.18, w=bw*.64, yy=y(vals[i]); const c=h===cur?'var(--lime)':h<cur?'var(--dim)':'var(--cyan)';
+    return `<rect x="${x}" y="${yy}" width="${w}" height="${Math.max(0,H-pb-yy)}" rx="3" fill="${c}"><title>${fmtT(h*60)}: ${vals[i]} sessions</title></rect>${i%2===0?`<text x="${x+w/2}" y="${H-5}" text-anchor="middle" font-size="10" fill="var(--muted)">${fmtT(h*60)}</text>`:''}`; }).join('');
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Sessions starting each hour today">${g}${bars}</svg>`;
+}
+function niceStep(max){ const mag=Math.pow(10,Math.floor(Math.log10(Math.max(1,max)/4))); return Math.ceil(max/4/mag)*mag; }
+function revChart(series){
+  const W=520,H=230,pl=46,pb=34,pt=16,pr=8; const max=Math.max(...series.map(s=>s.v));
+  const step=niceStep(max), top=step*4; const y=v=>pt+(H-pt-pb)*(1-v/top); const bw=(W-pl-pr)/series.length;
+  let g=''; for(let v=0;v<=top;v+=step) g+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${pl-6}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)">${v>=1000?'$'+(v/1000)+'k':'$'+v}</text>`;
+  const bars=series.map((s,i)=>{ const x=pl+i*bw+bw*.2,w=bw*.6,yy=y(s.v);
+    return `<rect x="${x}" y="${yy}" width="${w}" height="${H-pb-yy}" rx="3" fill="url(#rg)" opacity="${s.cur?1:.55}"><title>Week of ${fmtD(s.w)}: ${money(s.v)}</title></rect>${s.cur?`<text x="${x+w/2}" y="${yy-6}" text-anchor="middle" font-size="12" font-weight="600" fill="var(--lime)">${moneyK(s.v)}</text>`:''}${i%3===2||s.cur?`<text x="${x+w/2}" y="${H-pb+16}" text-anchor="middle" font-size="10.5" fill="${s.cur?'var(--fg)':'var(--muted)'}">${s.cur?'This wk':fmtD(s.w)}</text>`:''}`; }).join('');
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Booked revenue per week"><defs><linearGradient id="rg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--lime)"/><stop offset="1" style="stop-color:var(--cyan)"/></linearGradient></defs>${g}${bars}</svg>`;
+}
+
+/* ================= Performance: Sales KPIs ================= */
+function vSales(){
+  const src = S.sales.bySource; const sum = k => Object.values(src).reduce((a,x)=>a+x[k],0);
+  const leads = sum('leads'), consults = sum('consults'), signed = sum('signed'), rev = sum('pkgRev');
+  const month = parse(S.sales.month+'-01').toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  const funnel = [['Leads',leads,'var(--cyan)'],['Consults booked',consults,'color-mix(in srgb,var(--lime) 50%,var(--cyan))'],['Signed clients',signed,'var(--lime)']];
+  const pkgMix = Object.keys(PACKAGES).map(k=>({k, n:S.clients.filter(c=>c.pkg===k&&c.status==='Active').length}));
+  const maxP = Math.max(...pkgMix.map(x=>x.n));
+  const waitH = S.leads.length ? Math.round(S.leads.reduce((a,l)=>a+(Date.now()-l.received)/3600000,0)/S.leads.length) : 0;
+  return head('Performance', `Sales · ${month}`, 'Leads to signed clients, by where they came from. Signing a lead in Leads & Matching counts here.') +
+  `<div class="strip">${stat('Leads this month',leads,`${S.leads.length} waiting now`)}${stat('Consults booked',consults,`${Math.round(consults/Math.max(1,leads)*100)}% of leads`)}${stat('New clients',signed,`${Math.round(signed/Math.max(1,leads)*100)}% close rate`,'good')}${stat('New package revenue',money(rev),`avg wait for a reply: ${waitH}h`, waitH>24?'warn':'')}</div>
+  <div class="grid">
+    <section class="panel c6"><div class="panel-h"><h2>Funnel</h2><span class="meta">${month}</span></div>
+      <div class="hbars">${funnel.map(([l,n,c])=>`<div class="hbar"><span>${l}</span><span class="track"><i style="width:${n/Math.max(1,leads)*100}%;background:${c}"></i></span><span class="v num"><b>${n}</b></span></div>`).join('')}</div>
+      <p class="note" style="margin-top:12px">Referrals close at almost twice the rate of paid channels. Ask happy clients for a name at every renewal.</p></section>
+    <section class="panel c6"><div class="panel-h"><h2>Active clients by package</h2></div>
+      <div class="hbars">${pkgMix.map(x=>`<div class="hbar"><span>${PACKAGES[x.k].short}</span><span class="track"><i style="width:${x.n/maxP*100}%;background:linear-gradient(90deg,var(--lime),var(--cyan))"></i></span><span class="v num"><b>${x.n}</b> · ${money(PACKAGES[x.k].per)}</span></div>`).join('')}</div></section>
+    <section class="panel c12"><div class="panel-h"><h2>By source</h2><div class="right"><a class="btn sm primary" href="#leads">Match waiting leads</a></div></div>
+      <div class="tablewrap"><table><thead><tr><th>Source</th><th class="r">Leads</th><th class="r">Consults</th><th class="r">Signed</th><th class="r">Close rate</th><th class="r">Package revenue</th></tr></thead><tbody>
+      ${SOURCES.map(s=>{const x=src[s];return `<tr><td>${s}</td><td class="r num">${x.leads}</td><td class="r num">${x.consults}</td><td class="r num">${x.signed}</td><td class="r num">${Math.round(x.signed/Math.max(1,x.leads)*100)}%</td><td class="r num">${money(x.pkgRev)}</td></tr>`;}).join('')}
+      <tr class="total"><td>Total</td><td class="r num">${leads}</td><td class="r num">${consults}</td><td class="r num">${signed}</td><td class="r num">${Math.round(signed/Math.max(1,leads)*100)}%</td><td class="r num">${money(rev)}</td></tr></tbody></table></div></section>
+  </div>`;
+}
+
+/* ================= Performance: Reports ================= */
+function vReports(){
+  const tabs = [['zones','Revenue by zone'],['trainers','Trainer productivity'],['retention','Client retention']];
+  let body = '';
+  if (ui.repTab==='zones'){
+    const z = ZONES.map(zn=>{ const s = S.sessions.filter(x=>billable(x)&&C(x.clientId)?.zone===zn); return {zn, n:s.length, rev:s.reduce((a,x)=>a+sessionRevenue(x),0)}; }).sort((a,b)=>b.rev-a.rev);
+    const max = Math.max(...z.map(x=>x.rev));
+    body = `<section class="panel"><div class="panel-h"><h2>Revenue by zone</h2><span class="meta">Booked this week, where the client lives</span></div><div class="hbars">${z.map(x=>`<div class="hbar"><span>${x.zn}</span><span class="track"><i style="width:${x.rev/max*100}%;background:linear-gradient(90deg,var(--lime),var(--cyan))"></i></span><span class="v num"><b>${moneyK(x.rev)}</b> · ${x.n}</span></div>`).join('')}</div></section>`;
+  } else if (ui.repTab==='trainers'){
+    const st = stats(); const rows = S.trainers.filter(t=>t.status!=='On leave').map(t=>({t,b:st[t.id]})).sort((a,b)=>b.b.rev-a.b.rev);
+    body = `<section class="panel"><div class="panel-h"><h2>Trainer productivity</h2><span class="meta">This week</span><div class="right"><button class="btn" data-act="csvProd">Copy as CSV</button></div></div><div class="tablewrap"><table><thead><tr><th>Trainer</th><th class="r">Booked</th><th class="r">Done</th><th class="r">Cancelled</th><th class="r">No-show</th><th class="r">Revenue</th><th class="r">Per session</th><th class="r">Capacity used</th></tr></thead><tbody>
+      ${rows.map(({t,b})=>`<tr data-act="trainer" data-id="${t.id}"><td><div class="who">${av(t)}<div><b>${esc(fullName(t))}</b><small>${esc(t.zone)}</small></div></div></td><td class="r num">${b.booked}</td><td class="r num">${b.done}</td><td class="r num">${b.cx||'–'}</td><td class="r num">${b.noshow||'–'}</td><td class="r num">${money(b.rev)}</td><td class="r num">${b.booked?money(b.rev/b.booked):'–'}</td><td class="r num">${Math.round(util(t,st)*100)}%</td></tr>`).join('')}</tbody></table></div></section>`;
+  } else {
+    const act = S.clients.filter(c=>c.status!=='Paused'); const states = act.map(clientState);
+    const buckets = [['Under 3 months',0,90],['3–6 months',90,180],['6–12 months',180,365],['1–2 years',365,730],['2+ years',730,99999]].map(([l,a,b])=>({l, n:act.filter(c=>{const d=-daysUntil(c.since);return d>=a&&d<b;}).length}));
+    const max = Math.max(...buckets.map(x=>x.n));
+    body = `<div class="strip">${stat('Active clients',states.filter(s=>s!=='Paused').length,'')}${stat('At risk',states.filter(s=>s==='At risk').length,'no session in 10+ days','bad')}${stat('Paused',S.clients.filter(c=>c.status==='Paused').length,'on hold')}${stat('Renewing soon',states.filter(s=>s==='Renew soon').length,'2 or fewer sessions left','warn')}</div>
+      <section class="panel"><div class="panel-h"><h2>How long clients stay</h2><span class="meta">Time since they signed up</span></div><div class="hbars">${buckets.map(x=>`<div class="hbar"><span>${x.l}</span><span class="track"><i style="width:${x.n/max*100}%;background:var(--cyan)"></i></span><span class="v num"><b>${x.n}</b></span></div>`).join('')}</div></section>`;
+  }
+  return head('Performance','Reports','') + `<div class="seg">${tabs.map(([k,l])=>`<button class="${ui.repTab===k?'on':''}" data-act="repTab" data-v="${k}">${l}</button>`).join('')}</div>` + body;
+}
+
+/* ================= Business: Trainer roster ================= */
+function vTrainers(){
+  return head('People','Trainer roster',`${S.trainers.length} trainers across ${ZONES.length} service zones.`,`<button class="btn primary" data-act="addTrainer">+ Add trainer</button>`) + `<section class="panel"><div class="toolbar">
+    <input type="search" id="tQ" data-f="tQ" placeholder="Search name, ID or phone" value="${esc(ui.tQ)}" aria-label="Search trainers">
+    <select id="tZone" data-f="tZone" aria-label="Zone">${opt(ZONES,ui.tZone,'All zones')}</select>
+    <select id="tSpec" data-f="tSpec" aria-label="Specialty">${opt(SPECS,ui.tSpec,'All specialties')}</select>
+    <select id="tStatus" data-f="tStatus" aria-label="Status">${opt(['Active','Onboarding','On leave'],ui.tStatus,'Any status')}</select>
+    <select id="tSort" data-f="tSort" aria-label="Sort">${[['name','Sort: Name'],['util','Most booked'],['utilAsc','Least booked'],['rating','Highest rated'],['clients','Most clients'],['comp','Document issues first']].map(([v,l])=>`<option value="${v}" ${ui.tSort===v?'selected':''}>${l}</option>`).join('')}</select>
+  </div></section><div id="results">${trainerRows()}</div>`;
+}
+function trainerRows(){
+  const st = stats(); const q = ui.tQ.trim().toLowerCase();
+  const list = S.trainers.filter(t => (!ui.tZone||t.zone===ui.tZone) && (!ui.tSpec||t.specs.includes(ui.tSpec)) && (!ui.tStatus||t.status===ui.tStatus) && (!q || (fullName(t)+' '+t.id+' '+t.phone).toLowerCase().includes(q)));
+  const rank = {bad:0,warn:1,ok:2};
+  const sorters = {name:(a,b)=>a.last.localeCompare(b.last), util:(a,b)=>util(b,st)-util(a,st), utilAsc:(a,b)=>(a.status==='On leave')-(b.status==='On leave')||util(a,st)-util(b,st), rating:(a,b)=>b.rating-a.rating, clients:(a,b)=>st[b.id].clients-st[a.id].clients, comp:(a,b)=>rank[compWorst(a)]-rank[compWorst(b)]};
+  list.sort(sorters[ui.tSort]||sorters.name);
+  return `<p class="note" style="margin-bottom:10px">${list.length} of ${S.trainers.length} trainers</p><div class="tablewrap"><table>
+    <thead><tr><th>Trainer</th><th>Zone</th><th>Specialties</th><th>Status</th><th class="r">Clients</th><th>Booked this week</th><th class="r">Rating</th><th>Docs</th><th class="r">Phone</th></tr></thead>
+    <tbody>${list.map(t => { const u = util(t,st), w = compWorst(t); return `<tr data-act="trainer" data-id="${t.id}">
+      <td><div class="who">${av(t)}<div><b>${esc(fullName(t))}</b><small>${t.id} · ${esc(t.cert)}</small></div></div></td><td>${esc(t.zone)}</td>
+      <td>${t.specs.map(s=>`<span class="chip" style="--tc:${TYPE_COLORS[s]}">${esc(s)}</span>`).join(' ')}</td>
+      <td><span class="pill ${TRAINER_PILL[t.status]}">${t.status}</span></td><td class="r num">${st[t.id].clients}</td>
+      <td><div class="util"><div class="bar ${u>1?'hot':''}" style="flex:1"><i style="width:${Math.min(100,u*100)}%"></i></div><span class="num">${st[t.id].booked}/${t.capacity}</span></div></td>
+      <td class="r num">${t.rating.toFixed(1)}</td><td><span class="dot ${w}" title="${w==='ok'?'All documents current':w==='warn'?'Something expires within 30 days':'Something has expired'}"></span></td>
+      <td class="r num" style="white-space:nowrap">${esc(t.phone)}</td></tr>`; }).join('') || `<tr><td colspan="9" class="empty">No trainers match these filters.</td></tr>`}</tbody></table></div>`;
+}
+
+/* ================= Business: Client book ================= */
+function vClients(){
+  const tOpts = `<option value="">All trainers</option>`+[...S.trainers].sort((a,b)=>a.last.localeCompare(b.last)).map(t=>`<option value="${t.id}" ${ui.cTrainer===t.id?'selected':''}>${esc(t.last+', '+t.first)}</option>`).join('');
+  return head('Business','Client book',`${S.clients.length} in-home clients. At-risk clients and renewals are listed first.`,`<button class="btn primary" data-act="addClient">+ Add client</button>`) + `<section class="panel"><div class="toolbar">
+    <input type="search" id="cQ" data-f="cQ" placeholder="Search name, street or ID" value="${esc(ui.cQ)}" aria-label="Search clients">
+    <select id="cState" data-f="cState" aria-label="Client status">${opt(['Active','At risk','Renew soon','Paused','Unassigned'],ui.cState,'Every status')}</select>
+    <select id="cZone" data-f="cZone" aria-label="Zone">${opt(ZONES,ui.cZone,'All zones')}</select>
+    <select id="cTrainer" data-f="cTrainer" aria-label="Trainer">${tOpts}</select>
+  </div></section><div id="results">${clientRows()}</div>`;
+}
+function clientRows(){
+  const q = ui.cQ.trim().toLowerCase();
+  const list = S.clients.map(c=>({c, s:clientState(c)})).filter(({c,s}) => (!ui.cState||s===ui.cState) && (!ui.cZone||c.zone===ui.cZone) && (!ui.cTrainer||c.trainerId===ui.cTrainer) && (!q||(fullName(c)+' '+c.street+' '+c.id).toLowerCase().includes(q)));
+  const order = {'At risk':0,'Unassigned':1,'Renew soon':2,'Active':3,'Paused':4};
+  list.sort((a,b)=>order[a.s]-order[b.s]||a.c.last.localeCompare(b.c.last));
+  const shown = list.slice(0, ui.cLimit);
+  return `<p class="note" style="margin-bottom:10px">${list.length} clients${list.length>shown.length?` · showing ${shown.length}`:''}</p><div class="tablewrap"><table>
+    <thead><tr><th>Client</th><th>Home</th><th>Trainer</th><th>Package</th><th>Sessions left</th><th>Last session</th><th>Next session</th><th>Status</th></tr></thead>
+    <tbody>${shown.map(({c,s}) => { const t = T(c.trainerId); const nx = nextSession(c); const p = PACKAGES[c.pkg]; return `<tr data-act="client" data-id="${c.id}">
+      <td><div class="who">${av(c)}<div><b>${esc(fullName(c))}</b><small>${esc(GOALS[c.goal].g)}</small></div></div></td>
+      <td style="white-space:nowrap">${esc(c.street)}<br><small class="muted">${esc(c.zone)}</small></td>
+      <td style="white-space:nowrap">${t?esc(fullName(t)):'<span class="muted">Not assigned</span>'}</td><td style="white-space:nowrap">${esc(p.short)}</td>
+      <td><div class="util"><div class="bar ${c.remaining<=2?'hot':''}" style="flex:1"><i style="width:${Math.min(100,c.remaining/p.size*100)}%"></i></div><span class="num">${c.remaining}</span></div></td>
+      <td style="white-space:nowrap">${ago(lastSession(c))}</td><td style="white-space:nowrap">${nx?`${DOW[dayIndex(nx)]} ${fmtT(nx.start)}`:'<span class="muted">Not booked</span>'}</td>
+      <td><span class="pill ${CLIENT_PILL[s]}">${s}</span></td></tr>`; }).join('') || `<tr><td colspan="8" class="empty">No clients match these filters.</td></tr>`}</tbody></table></div>
+  ${list.length>shown.length?`<div class="more"><button class="btn" data-act="moreClients">Show ${Math.min(80,list.length-shown.length)} more</button></div>`:''}`;
+}
+
+/* ================= Business: Schedule ================= */
+function vSchedule(){
+  if (ui.day===null || ui.day<0 || ui.day>6) ui.day = Math.max(0,Math.min(6,todayIdx()));
+  const mode = ui.mode;
+  const ws = parse(S.weekStart), ti = todayIdx();
+  const days = DOW.map((d,i)=>{ const date=ymd(addDays(ws,i)); const n=S.sessions.filter(s=>s.date===date&&billable(s)).length;
+    return `<button class="${ui.day===i?'on':''} ${ti===i?'today':''}" data-act="day" data-i="${i}"><b>${d} ${fmtD(date,{day:'numeric'})}</b><small class="num">${ti===i?'Today · ':''}${n}</small></button>`; }).join('');
+  const tOpts = [...S.trainers].sort((a,b)=>a.last.localeCompare(b.last)).map(t=>`<option value="${t.id}" ${ui.sTrainer===t.id?'selected':''}>${esc(t.last+', '+t.first)} · ${esc(t.zone)}</option>`).join('');
+  const controls = `<section class="panel">
+    <div class="panel-h"><h2>Week of ${fmtD(S.weekStart,{month:'long',day:'numeric'})}</h2>
+      <div class="right"><div class="seg"><button class="${mode==='board'?'on':''}" data-act="mode" data-m="board">Dispatch board</button><button class="${mode==='week'?'on':''}" data-act="mode" data-m="week">Trainer week</button></div></div></div>
+    <div class="toolbar">${mode==='board' ? `<div class="days">${days}</div><select id="sZone" data-f="sZone" aria-label="Zone">${opt(ZONES,ui.sZone,'All zones')}</select><input type="search" id="sQ" data-f="sQ" placeholder="Find a trainer" value="${esc(ui.sQ)}" aria-label="Find a trainer">`
+      : `<select id="sTrainer" data-f="sTrainer" aria-label="Trainer" style="max-width:100%">${tOpts}</select>`}</div>
+    <div class="legend" style="margin-top:12px">${SPECS.map(s=>`<span class="chip" style="--tc:${TYPE_COLORS[s]}">${s}</span>`).join('')}<span class="chip" style="--tc:var(--dim)">Striped = cancelled</span></div>
+  </section>`;
+  return controls + `<div id="results">${mode==='board'?boardHtml():weekHtml()}</div>`;
+}
+function blkCls(s){ const L=live(s); return L==='Cancelled'?'cx':L==='No-show'?'ns':L==='In progress'?'ip':L==='Completed'?'done':''; }
+function boardHtml(){
+  const date = ymd(addDays(parse(S.weekStart), ui.day)); const q = ui.sQ.trim().toLowerCase();
+  const daySess = S.sessions.filter(s=>s.date===date); const byT = {}; for (const s of daySess) (byT[s.trainerId] ||= []).push(s);
+  const list = S.trainers.filter(t=>(!ui.sZone||t.zone===ui.sZone) && (!q||fullName(t).toLowerCase().includes(q)));
+  list.sort((a,b)=>(a.status==='On leave')-(b.status==='On leave') || (byT[b.id]?.length||0)-(byT[a.id]?.length||0) || a.last.localeCompare(b.last));
+  const pct = m => (m-360)/900*100;
+  const hrs = Array.from({length:16},(_,i)=>`<span style="left:${i/15*100}%">${fmtT((6+i)*60)}</span>`).join('');
+  const nm = nowMin(); const now = ui.day===todayIdx() && nm>=360 && nm<=1260 ? `<div class="nowline" style="left:${pct(nm)}%"></div>` : '';
+  const total = daySess.filter(billable).length; const active = list.filter(t=>byT[t.id]?.some(billable)).length;
+  return `<section class="panel"><div class="panel-h"><h2>${fmtD(date,{weekday:'long',month:'short',day:'numeric'})}</h2><span class="meta">${total} sessions · ${active} trainers out in homes</span></div>
+    <div class="tablewrap"><div class="board">
+      <div class="bhead"><div style="padding:7px 10px;font-size:12px;color:var(--muted)">TRAINER</div><div class="hrs">${hrs}</div></div>
+      ${list.map(t => `<div class="brow"><div class="bn" data-act="trainer" data-id="${t.id}">${av(t)}<div style="min-width:0"><b>${esc(fullName(t))}</b><small>${esc(t.zone)}</small></div></div>
+        <div class="trk">${now}${t.status==='On leave' ? '<div class="leave">On leave this week</div>' : (byT[t.id]||[]).map(s=>{const c=C(s.clientId);return `<button class="blk ${blkCls(s)}" style="left:${pct(s.start)}%;width:${s.dur/900*100}%;background:${TYPE_COLORS[s.type]}" data-act="session" data-id="${s.id}" title="${esc(s.type)} · ${live(s)}">${esc(fullName(c))}<small>${fmtT(s.start)} · ${esc(c.zone)}</small></button>`;}).join('')}</div></div>`).join('') || '<div class="empty">No trainers match.</div>'}
+    </div></div></section>`;
+}
+function weekHtml(){
+  if (!ui.sTrainer || !T(ui.sTrainer)){ const st=stats(); ui.sTrainer = [...S.trainers].sort((a,b)=>st[b.id].booked-st[a.id].booked)[0].id; }
+  const t = T(ui.sTrainer); const ws = parse(S.weekStart), ti = todayIdx(), px = 44; const st = stats();
+  const sess = S.sessions.filter(s=>s.trainerId===t.id);
+  const ax = Array.from({length:16},(_,i)=>`<span style="top:${i*px}px">${fmtT((6+i)*60)}</span>`).join('');
+  return `<section class="panel"><div class="panel-h">${av(t)}<div><h2 style="line-height:1">${esc(fullName(t))}</h2><span class="meta">${esc(t.zone)} · ${st[t.id].booked}/${t.capacity} sessions booked · ${t.specs.join(' & ')}</span></div><div class="right"><button class="btn sm" data-act="trainer" data-id="${t.id}">Open profile</button></div></div>
+    <div class="tablewrap"><div class="week">
+      <div class="wh"></div>${DOW.map((d,i)=>`<div class="wh ${ti===i?'today':''}">${d}<small>${fmtD(ymd(addDays(ws,i)))}</small></div>`).join('')}
+      <div class="ax" style="height:${15*px}px">${ax}</div>
+      ${DOW.map((d,i)=>`<div class="col" style="height:${15*px}px">${t.status==='On leave'&&i===0?'<div class="leave">On leave this week</div>':''}${sess.filter(s=>dayIndex(s)===i).map(s=>`<button class="blk ${blkCls(s)}" style="top:${(s.start-360)/60*px+2}px;height:${s.dur/60*px-4}px;background:${TYPE_COLORS[s.type]}" data-act="session" data-id="${s.id}">${esc(s.type)}<small>${esc(fullName(C(s.clientId)))}</small></button>`).join('')}</div>`).join('')}
+    </div></div></section>`;
+}
+
+/* ================= Business: Leads ================= */
+function matchesFor(lead){
+  const st = stats(); const spec = GOALS[lead.goal].s;
+  return S.trainers.filter(t=>t.status!=='On leave' && compWorst(t)!=='bad').map(t => {
+    const open = Math.max(0, t.capacity - st[t.id].booked);
+    const zoneScore = t.zone===lead.zone ? 40 : NEIGHBORS[lead.zone].includes(t.zone) ? 20 : 0;
+    const specScore = t.specs[0]===spec ? 30 : t.specs.includes(spec) ? 24 : 0;
+    const score = Math.round(zoneScore + specScore + Math.min(20, open/t.capacity*30) + (t.rating-4.3)*14);
+    const why = [];
+    if (zoneScore===40) why.push('Covers '+lead.zone); else if (zoneScore) why.push('Next door in '+t.zone);
+    if (specScore) why.push(spec+' specialist');
+    why.push(open+' open slots', t.rating.toFixed(1)+'★');
+    return {t, score:Math.min(99,score), why, open};
+  }).filter(m=>m.open>0).sort((a,b)=>b.score-a.score).slice(0,3);
+}
+function vLeads(){
+  const intro = head('Business','Leads & matching','Each lead is scored against every trainer on zone, specialty, open capacity and rating. Trainers with expired documents are left out.',`<button class="btn primary" data-act="addLead">+ Add lead</button>`);
+  if (!S.leads.length) return intro + `<div class="panel empty">No leads waiting. New inquiries you add will appear here.</div>`;
+  return intro + `<div class="cards">${S.leads.map(l => { const open = ui.openLead===l.id; const hrs = Math.max(1,Math.round((Date.now()-l.received)/3600000));
+    return `<article class="card">
+      <div class="card-h">${av(l)}<div><b>${esc(fullName(l))}</b><small>${esc(l.source)} · ${hrs<24?hrs+'h ago':Math.round(hrs/24)+'d ago'}</small></div><span class="pill ${hrs>24?'warn':'info'}">${hrs>24?'Follow up':'New'}</span></div>
+      <dl class="kv"><dt>Zone</dt><dd>${esc(l.zone)}</dd><dt>Goal</dt><dd>${esc(GOALS[l.goal].g)}</dd><dt>Prefers</dt><dd>${esc(l.slot)}</dd><dt>Interested in</dt><dd>${esc(PACKAGES[l.pkg].name)}</dd>${l.note?`<dt>Notes</dt><dd>${esc(l.note)}</dd>`:''}</dl>
+      <div class="actions" style="justify-content:flex-start"><button class="btn ${open?'':'primary'} sm" data-act="toggleLead" data-id="${l.id}">${open?'Hide matches':'Find trainers'}</button><button class="btn ghost sm danger" data-act="dropLead" data-id="${l.id}">Archive</button></div>
+      ${open ? `<div class="match">${matchesFor(l).map(m=>`<div class="mrow">${av(m.t)}<div style="min-width:0"><b>${esc(fullName(m.t))}</b><small>${m.why.map(esc).join(' · ')}</small></div><div style="display:flex;gap:8px;align-items:center"><span class="score num">${m.score}<small><br>match</small></span><button class="btn primary sm" data-act="assignLead" data-id="${l.id}" data-t="${m.t.id}">Assign</button></div></div>`).join('') || '<div class="empty">No trainer has open capacity right now.</div>'}</div>` : ''}
+    </article>`; }).join('')}</div>`;
+}
+
+/* ================= Business: Payroll ================= */
+function payFor(t, st){
+  const b = st[t.id]; const ns = b.noshow; const remaining = Math.max(0,b.booked - b.done - ns);
+  const base = b.done*t.rate + ns*t.rate*.5; const travel = (b.done+ns)*4;
+  const bonus = b.done+remaining>=18 && t.rating>=4.8 ? 75 : 0;
+  const toDate = base + travel; const proj = toDate + remaining*(t.rate+4) + bonus;
+  return {done:b.done, ns, remaining, base, travel, bonus, toDate, proj, rev:b.rev};
+}
+function vPayroll(){
+  const st = stats(); const rows = S.trainers.filter(t=>t.status!=='On leave').map(t=>({t, p:payFor(t,st)})).sort((a,b)=>b.p.proj-a.p.proj);
+  const sum = k => rows.reduce((a,r)=>a+r.p[k],0);
+  const rev = sum('rev'), proj = sum('proj'); const margin = rev ? (rev-proj)/rev*100 : 0;
+  const end = fmtD(ymd(addDays(parse(S.weekStart),6)));
+  return head('Business','Trainer payroll','Trainers are paid weekly, per completed session.') + `<div class="strip">
+    ${stat('Earned to date',money(sum('toDate')),`${sum('done')} sessions completed`)}${stat('Projected payroll',money(proj),`Week ending ${end}`)}${stat('Booked revenue',money(rev),'Same week, all clients')}${stat('Gross margin',margin.toFixed(1)+'%','Revenue minus trainer pay',margin>=40?'good':'warn')}</div>
+  <section class="panel">
+    <div class="panel-h"><h2>Pay period ${fmtD(S.weekStart)} – ${end}</h2><span class="meta">No-shows pay 50% · $4 travel per visit · $75 bonus at 18+ sessions with a 4.8+ rating</span><div class="right"><button class="btn" data-act="csv">Copy as CSV</button></div></div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Trainer</th><th class="r">Rate</th><th class="r">Done</th><th class="r">No-show</th><th class="r">Still booked</th><th class="r">Session pay</th><th class="r">Travel</th><th class="r">Bonus</th><th class="r">Earned</th><th class="r">Projected</th></tr></thead>
+      <tbody>${rows.map(({t,p})=>`<tr data-act="trainer" data-id="${t.id}"><td><div class="who">${av(t)}<div><b>${esc(fullName(t))}</b><small>${t.id} · ${esc(t.zone)}</small></div></div></td>
+        <td class="r num">${money(t.rate)}</td><td class="r num">${p.done}</td><td class="r num">${p.ns||'–'}</td><td class="r num">${p.remaining}</td><td class="r num">${money(p.base)}</td><td class="r num">${money(p.travel)}</td><td class="r num">${p.bonus?money(p.bonus):'–'}</td><td class="r num">${money(p.toDate)}</td><td class="r num"><b>${money(p.proj)}</b></td></tr>`).join('')}
+      <tr class="total"><td>${rows.length} trainers</td><td></td><td class="r num">${sum('done')}</td><td class="r num">${sum('ns')}</td><td class="r num">${sum('remaining')}</td><td class="r num">${money(sum('base'))}</td><td class="r num">${money(sum('travel'))}</td><td class="r num">${money(sum('bonus'))}</td><td class="r num">${money(sum('toDate'))}</td><td class="r num">${money(proj)}</td></tr>
+      </tbody></table></div></section>`;
+}
+const csvLine = r => r.map(v=>/[",\n]/.test(String(v))?`"${String(v).replace(/"/g,'""')}"`:v).join(',');
+function payrollCsv(){
+  const st = stats(); const lines = [['Trainer ID','Trainer','Zone','Rate','Completed','No-shows','Still booked','Session pay','Travel','Bonus','Earned to date','Projected']];
+  for (const t of S.trainers.filter(t=>t.status!=='On leave')){ const p = payFor(t,st); lines.push([t.id,fullName(t),t.zone,t.rate,p.done,p.ns,p.remaining,p.base.toFixed(2),p.travel.toFixed(2),p.bonus.toFixed(2),p.toDate.toFixed(2),p.proj.toFixed(2)]); }
+  return lines.map(csvLine).join('\n');
+}
+function prodCsv(){
+  const st = stats(); const lines = [['Trainer ID','Trainer','Zone','Booked','Completed','Cancelled','No-shows','Revenue','Capacity used %']];
+  for (const t of S.trainers.filter(t=>t.status!=='On leave')){ const b = st[t.id]; lines.push([t.id,fullName(t),t.zone,b.booked,b.done,b.cx,b.noshow,b.rev,Math.round(util(t,st)*100)]); }
+  return lines.map(csvLine).join('\n');
+}
+
+/* ================= Business: Resources ================= */
+const RESOURCES = {
+  forms:{l:'Forms & waivers', items:[
+    ['Liability waiver & release','Every client signs before the first session. Partner packs need both people.','v4 · updated Aug 2026'],
+    ['PAR-Q+ health questionnaire','Screens for heart, blood pressure, joint and medication risks. Any "yes" needs medical clearance.','2026 edition'],
+    ['Medical clearance letter','For clients flagged by the PAR-Q+, post-surgery, or pregnant. Signed by their doctor.','v2'],
+    ['New client intake','Goals, schedule, equipment at home, parking and pets, emergency contact.','v3'],
+    ['Incident report','File within 24 hours of any injury, fall or property damage, however small.','v2 · updated Jun 2026'],
+    ['Photo & progress consent','Required before sharing any client photos or results, even without a face.','v1']]},
+  safety:{l:'Emergency plan', items:null},
+  kit:{l:'Trainer kit', items:[
+    ['Adjustable dumbbells (5–25 lb)','Or two pairs of fixed weights for clients with no equipment',''],
+    ['Resistance bands, light to heavy','Loop bands and handled tubes',''],
+    ['Travel mat and sanitizing wipes','Wipe every item down after each visit',''],
+    ['First aid kit','Restocked monthly. Includes an instant cold pack',''],
+    ['Blood pressure cuff and pulse oximeter','For older adults, post-rehab and prenatal clients',''],
+    ['Phone with the app and a full charge','Check in, log sessions, reach dispatch','']]},
+  platforms:{l:'Platforms', items:[
+    ['Payments & packages','Where package payments and renewals are processed','Office admins'],
+    ['Payroll provider','Weekly trainer payroll runs every Monday','Owner & Operations Manager'],
+    ['Background checks','Order checks for new hires; renew every year','Trainer Development'],
+    ['Insurance carrier portal','General & professional liability certificates for trainers and condo/HOA requests','Operations Manager'],
+    ['Website lead form','New inquiries land in Leads & Matching','Everyone']]}
+};
+function vResources(){
+  const tab = RESOURCES[ui.resTab] ? ui.resTab : 'forms';
+  const tabs = `<div class="seg">${Object.entries(RESOURCES).map(([k,x])=>`<button class="${tab===k?'on':''}" data-act="resTab" data-v="${k}">${x.l}</button>`).join('')}</div>`;
+  let body;
+  if (tab==='safety') body = `<section class="panel prose"><div class="panel-h"><h2>Emergency action plan for in-home sessions</h2></div>
+    <ol><li><b>Stop the session</b> and make the area safe. Do not move someone who may have a head, neck or back injury.</li>
+    <li><b>Call 911</b> for chest pain, trouble breathing, fainting, a suspected fracture, or anything you are unsure about. Give the client's full street address.</li>
+    <li><b>Start CPR and use an AED</b> if the client is unresponsive and not breathing normally. Ask anyone else in the home to bring the nearest AED.</li>
+    <li><b>Call the client's emergency contact</b> from their intake form once help is on the way.</li>
+    <li><b>Call dispatch</b> so we can cover your next sessions, then <b>file an incident report</b> in Resources within 24 hours.</li></ol>
+    <p class="note">Every trainer keeps CPR/AED current. Certifications & Insurance shows who is due.</p></section>`;
+  else body = `<div class="list" style="background:var(--panel)">${RESOURCES[tab].items.map(([a,b,c])=>`<div><span style="min-width:0"><b>${esc(a)}</b><br><small>${esc(b)}</small></span>${c?`<span class="end"><small>${esc(c)}</small></span>`:''}</div>`).join('')}</div>`;
+  return head('Business','Resources','Forms, the emergency plan, the standard trainer kit and the platforms the business signs into.') + tabs + body;
+}
+
+/* ================= Team: Training ================= */
+function vTraining(){
+  const onb = S.trainers.filter(t=>t.status==='Onboarding');
+  const avg = onb.length ? Math.round(onb.reduce((a,t)=>a+trainingPct(t),0)/onb.length) : 100;
+  const ride = onb.filter(t=>!t.training.m9).length;
+  const byMod = MODULES.map(m=>({m, n:onb.filter(t=>t.training[m.id]).length}));
+  return head('Team development','Training','New trainers finish nine modules, including two ride-alongs, before taking clients on their own.',`<button class="btn" data-act="go" data-href="#trainers" data-tstatus="Onboarding">Onboarding trainers in roster</button>`) +
+  `<div class="strip">${stat('Onboarding',onb.length,'new trainers')}${stat('Average progress',avg+'%','across the group')}${stat('Ride-alongs left',ride,'need a senior trainer',ride?'warn':'good')}${stat('Ready to go',onb.filter(t=>trainingPct(t)===100).length,'all modules signed off','good')}</div>
+  <div class="grid">
+    <section class="panel c7"><div class="panel-h"><h2>Onboarding progress</h2><span class="meta">Click a trainer to sign off modules</span></div>
+      ${onb.length?`<div class="list">${onb.map(t=>`<button data-act="trainingOf" data-id="${t.id}">${av(t)}<span style="min-width:0;flex:1"><b>${esc(fullName(t))}</b><br><small>${esc(t.zone)} · hired ${fmtD(t.hired)}</small></span><span class="end" style="width:40%"><span class="bar" style="flex:1"><i style="width:${trainingPct(t)}%"></i></span><span class="num" style="min-width:38px;text-align:right">${trainingPct(t)}%</span></span></button>`).join('')}</div>`:'<div class="empty">No trainers onboarding right now.</div>'}</section>
+    <section class="panel c5"><div class="panel-h"><h2>Modules</h2><span class="meta">How many onboarding trainers finished each</span></div>
+      <div class="hbars">${byMod.map(x=>`<div class="hbar" style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) 40px"><span style="font-size:13px">${esc(x.m.name)}</span><span class="track"><i style="width:${onb.length?x.n/onb.length*100:0}%;background:var(--lime)"></i></span><span class="v num"><b>${x.n}</b>/${onb.length}</span></div>`).join('')}</div></section>
+  </div>`;
+}
+function trainingModal(id){
+  const t = T(id);
+  openModal(`<div class="d-h">${av(t)}<div><h2>${esc(fullName(t))}</h2><p>${trainingPct(t)}% of onboarding signed off</p></div><button class="x" data-act="close" aria-label="Close">${I.x}</button></div>
+    <div class="checks">${MODULES.map(m=>`<label class="check ${t.training[m.id]?'done':''}" for="tmm_${m.id}"><input type="checkbox" id="tmm_${m.id}" data-mod="${m.id}" data-t="${t.id}" ${t.training[m.id]?'checked':''}><span>${esc(m.name)}<small>${m.hrs} hr${m.hrs===1?'':'s'}</small></span></label>`).join('')}</div>
+    ${trainingPct(t)===100?`<div class="actions"><button class="btn primary" data-act="graduate" data-id="${t.id}">Move to Active</button></div>`:''}`);
+}
+
+/* ================= Team: Certifications & insurance ================= */
+function vCompliance(){
+  let bad=0, warn=0, clear=0; for (const t of S.trainers){ const w = compWorst(t); if (w==='bad') bad++; else if (w==='warn') warn++; else clear++; }
+  return head('Team development','Certifications & insurance','Every trainer working in a client\'s home needs a current certification, CPR/AED, a background check from the last year and liability insurance.') +
+  `<div class="strip">${stat('Expired',bad,'trainers with something expired','bad')}${stat('Expiring ≤ 30 days',warn,'trainers to remind this month','warn')}${stat('Fully current',clear,'cleared for in-home visits','good')}${stat('Insurance due ≤ 30 days',S.trainers.filter(t=>daysUntil(t.insExp)<=30).length,'general & professional liability')}</div>
+  <section class="panel"><div class="toolbar">
+    <input type="search" id="compQ" data-f="compQ" placeholder="Search trainer" value="${esc(ui.compQ)}" aria-label="Search trainer">
+    <div class="seg"><button class="${ui.compIssues?'on':''}" data-act="compIssues" data-v="1">Needs action</button><button class="${!ui.compIssues?'on':''}" data-act="compIssues" data-v="0">All trainers</button></div>
+    <span class="count">Renew logs today's date: certifications and CPR for 2 years, insurance and background checks for 1.</span>
+  </div></section><div id="results">${compRows()}</div>`;
+}
+function compRows(){
+  const q = ui.compQ.trim().toLowerCase(); const rank={bad:0,warn:1,ok:2};
+  const list = S.trainers.filter(t=>(!ui.compIssues || compWorst(t)!=='ok') && (!q||fullName(t).toLowerCase().includes(q))).sort((a,b)=>rank[compWorst(a)]-rank[compWorst(b)]||a.last.localeCompare(b.last));
+  const cell = (t,x) => `<td><div class="cc"><span class="pill ${x.state}">${x.days<0?'Expired':x.days<=30?x.days+'d left':'Current'}</span><small>${fmtD(x.exp,{month:'short',day:'numeric',year:'2-digit'})}</small>${x.state!=='ok'?`<button class="btn sm" data-act="renew" data-id="${t.id}" data-k="${x.k}">Renew</button>`:''}</div></td>`;
+  return `<div class="tablewrap"><table><thead><tr><th>Trainer</th><th>Certification</th><th>CPR / AED</th><th>Background check</th><th>Liability insurance</th></tr></thead>
+    <tbody>${list.map(t=>`<tr data-act="trainer" data-id="${t.id}"><td><div class="who">${av(t)}<div><b>${esc(fullName(t))}</b><small>${esc(t.cert)} · ${esc(t.zone)}</small></div></div></td>${compItems(t).map(x=>cell(t,x)).join('')}</tr>`).join('') || '<tr><td colspan="5" class="empty">Every trainer is current. Nothing to renew.</td></tr>'}</tbody></table></div>`;
+}
+
+/* ================= Settings ================= */
+function vSettings(){
+  const admin = role()==='owner'||role()==='admin';
+  const looks = `<section class="panel"><div class="panel-h"><h2>Appearance</h2><span class="meta">Saved in this browser</span></div><div class="looks">${Object.entries(LOOKS).filter(([,l])=>inSeason(l)).map(([k,l])=>`<button class="look ${S.look===k?'on':''}" data-act="look" data-v="${k}"><span class="sw">${l.sw.map(c=>`<i style="background:${c}"></i>`).join('')}</span><b>${l.name}</b><small>${l.note}</small></button>`).join('')}</div></section>`;
+  if (!admin) return head('Administration','Settings','') + looks;
+  const people = [...STAFF.filter(u=>u.id!=='U0')];
+  const access = `<section class="panel"><div class="panel-h"><h2>Team & access</h2><span class="meta">5 of 5 seats used. Only these five people can open Declara Fitness. Trainers don't sign in: they are managed here as records. Owners and admins see everything; switch sections on or off for coordinators.</span></div>
+    <div class="tablewrap"><table class="access"><thead><tr><th>Person</th><th>Role</th>${SECTIONS.map(s=>`<th title="${esc(s.n)}">${s.l}</th>`).join('')}<th></th></tr></thead><tbody>
+    ${people.map(u=>{const r=u.role;const full=r==='owner'||r==='admin';return `<tr><td><div class="who">${av(u)}<div><b>${esc(fullName(u))}</b><small>${esc(u.title)}</small></div></div></td><td>${ROLE_LABEL[r]}</td>${SECTIONS.map(s=>{const on=full||(S.access[u.id]&&s.k in S.access[u.id]?S.access[u.id][s.k]:ROLE_DEFAULTS[r].includes(s.k));return `<td style="text-align:center"><input type="checkbox" aria-label="${esc(s.l)} for ${esc(fullName(u))}" data-access="${u.id}" data-k="${s.k}" ${on?'checked':''} ${full?'disabled':''}></td>`;}).join('')}<td><button class="btn sm" data-act="viewAs" data-id="${u.id}">Preview as</button></td></tr>`;}).join('')}
+    </tbody></table></div></section>`;
+  const biz = `<section class="panel"><div class="panel-h"><h2>Business</h2></div><form id="bizForm" class="form">
+    <label class="field" for="f_biz">Business name<input id="f_biz" name="f_biz" value="${esc(S.biz)}"></label>
+    <label class="field" for="f_owner">Your name<input id="f_owner" name="f_owner" value="${esc(S.ownerName)}" placeholder="Shown on My Space"></label>
+    <div class="actions" style="grid-column:1/-1;justify-content:flex-start"><button class="btn primary" type="submit">Save</button></div></form></section>`;
+  return head('Administration','Settings',`${LOOKS[S.look]?.name||'Neon'} look · ${STAFF.length} office staff · ${S.trainers.length} trainers`) + biz + looks + access;
+}
+
+/* ================= Declara AI ================= */
+const AI_CHIPS = ['Who is free tomorrow morning in Riverside?','Whose CPR is expired?','Top trainer this week','Which clients are at risk?','Payroll this week','Who covers Oak Valley?','What is overdue?','Packages ending soon'];
+let aiLog = [];
+function aiOpen(){
+  if (!aiLog.length) aiLog.push({who:'bot', html:`Hi ${esc(me().first)}. I answer from ${esc(S.biz)}'s own data: trainers, clients, the schedule, pay and documents. Nothing leaves this page.`});
+  $('#aiLayer').innerHTML = `<div class="ai" role="dialog" aria-label="Declara AI"><div class="ai-h"><div><b>Declara AI</b><small>Answers from your business data</small></div><button class="x" data-act="aiClose" aria-label="Close">${I.x}</button></div>
+    <div class="ai-log" id="aiLog">${aiLog.map(m=>m.who==='me'?`<div class="ai-me">${esc(m.q)}</div>`:`<div class="ai-bot">${m.html}</div>`).join('')}</div>
+    <div class="ai-chips">${AI_CHIPS.map(q=>`<button data-act="aiAsk" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+    <form id="aiForm"><input id="aiQ" name="aiQ" placeholder="Ask about trainers, clients, schedule…" autocomplete="off" aria-label="Ask Declara AI"><button class="btn primary" type="submit">Ask</button></form></div>`;
+  const lg = $('#aiLog'); lg.scrollTop = lg.scrollHeight; $('#aiQ').focus();
+}
+const ul = (items, max=10) => `<ul>${items.slice(0,max).map(x=>`<li>${x}</li>`).join('')}</ul>${items.length>max?`<div class="muted">…and ${items.length-max} more.</div>`:''}`;
+const goBtn = (href,label) => `<a class="btn sm go" href="${href}" data-act="aiGo">${label}</a>`;
+function aiAnswer(qRaw){
+  const q = qRaw.toLowerCase(); const st = stats(); const ti = todayIdx();
+  const zone = ZONES.find(z=>q.includes(z.toLowerCase()));
+  let day = /today/.test(q) ? ti : /tomorrow/.test(q) ? ti+1 : DOW_FULL.findIndex(d=>q.includes(d)||new RegExp('\\b'+d.slice(0,3)+'\\b').test(q));
+  const slot = /morning|early/.test(q)?'Mornings':/midday|noon|lunch|afternoon/.test(q)?'Midday':/evening|night|after work/.test(q)?'Evenings':null;
+  const spec = SPECS.find(s=>SPEC_WORDS[s].test(q));
+  if (/free|available|open|who can (take|cover)/.test(q) && !/slot/.test(q.replace('open slots',''))){
+    if (day<0) day = ti; if (day>6) return 'I can only see this week\'s schedule. Ask about a day from Monday to Sunday.';
+    const date = ymd(addDays(parse(S.weekStart),day)); const [lo,hi] = slot ? SLOTS[slot] : [360,1170];
+    const res = S.trainers.filter(t=>t.status!=='On leave'&&compWorst(t)!=='bad'&&(!zone||t.zone===zone||NEIGHBORS[zone].includes(t.zone))&&(!spec||t.specs.includes(spec))).map(t=>{ let first=null; for(let m=lo;m<=hi;m+=30){ if(!conflicts(t.id,date,m,60)){ first=m; break; } } return {t, first, near:zone&&t.zone===zone}; }).filter(x=>x.first!==null && (day!==ti || x.first>nowMin())).sort((a,b)=>b.near-a.near||util(a.t,st)-util(b.t,st));
+    if (!res.length) return 'Nobody matching that is free then. Try a neighboring zone or another time of day.';
+    return `${res.length} trainers are free ${DOW_FULL[day][0].toUpperCase()+DOW_FULL[day].slice(1)}${slot?' '+slot.toLowerCase():''}${zone?` in or next to ${zone}`:''}${spec?` who do ${spec}`:''}. Least booked first:`+ul(res.map(x=>`<b>${esc(fullName(x.t))}</b> · ${esc(x.t.zone)} · free from ${fmtT(x.first)} · ${st[x.t.id].booked}/${x.t.capacity} booked`),8)+goBtn('#schedule','Open dispatch board');
+  }
+  if (/cpr|cert|insur|background|expire|compliance|document/.test(q)){
+    const k = /cpr|aed/.test(q)?'cpr':/insur/.test(q)?'ins':/background/.test(q)?'bg':/cert/.test(q)?'cert':null;
+    const rows = []; for (const t of S.trainers) for (const x of compItems(t)) if ((!k||x.k===k) && (/expir(ing|e soon)|soon|30/.test(q) ? x.state==='warn' : /expired/.test(q) ? x.state==='bad' : x.state!=='ok')) rows.push({t,x});
+    rows.sort((a,b)=>a.x.days-b.x.days);
+    return rows.length ? `${rows.length} found:`+ul(rows.map(({t,x})=>`<b>${esc(fullName(t))}</b> · ${esc(x.label)} · ${x.days<0?'expired '+fmtD(x.exp):x.days+' days left'}`))+goBtn('#compliance','Open Certifications') : 'Nothing found. Everyone is current for that.';
+  }
+  if (/top|best|leader|rank|most sessions/.test(q)){
+    const r = S.trainers.filter(t=>t.status==='Active').sort((a,b)=>st[b.id].done-st[a.id].done||b.rating-a.rating).slice(0,5);
+    return 'Most sessions completed this week:'+ul(r.map((t,i)=>`${i+1}. <b>${esc(fullName(t))}</b> · ${st[t.id].done} done · ${t.rating.toFixed(1)}★ · ${esc(t.zone)}`));
+  }
+  if (/risk|lapsed|haven.?t (seen|trained)|losing/.test(q)){ const r = S.clients.filter(c=>clientState(c)==='At risk'); return r.length?`${r.length} clients have gone 10+ days without a session and nothing is booked:`+ul(r.map(c=>`<b>${esc(fullName(c))}</b> · last session ${ago(lastSession(c)).toLowerCase()} · ${esc(fullName(T(c.trainerId)))}`))+goBtn('#clients','Open client book'):'No clients are at risk right now.'; }
+  if (/renew|ending|package|running out/.test(q)){ const r = S.clients.filter(c=>clientState(c)==='Renew soon'); return `${r.length} clients have 2 or fewer sessions left:`+ul(r.map(c=>`<b>${esc(fullName(c))}</b> · ${c.remaining} left on ${esc(PACKAGES[c.pkg].short)} · ${esc(fullName(T(c.trainerId)))}`))+goBtn('#clients','Open client book'); }
+  if (/payroll|pay|wages/.test(q)){ const rows = S.trainers.filter(t=>t.status!=='On leave').map(t=>payFor(t,st)); const tot = k=>rows.reduce((a,p)=>a+p[k],0); return `Trainers have earned <b>${money(tot('toDate'))}</b> so far this week. Projected for the full week: <b>${money(tot('proj'))}</b>, against ${money(tot('rev'))} in booked revenue.`+goBtn('#payroll','Open Trainer Payroll'); }
+  if (/revenue|sales|income|made/.test(q)){ const rev = S.sessions.filter(billable).reduce((a,s)=>a+sessionRevenue(s),0); return `Booked revenue this week is <b>${money(rev)}</b> from ${S.sessions.filter(billable).length} sessions.`+goBtn('#dashboard','Open dashboard'); }
+  if (/lead/.test(q)){ return S.leads.length?`${S.leads.length} leads are waiting:`+ul(S.leads.map(l=>`<b>${esc(fullName(l))}</b> · ${esc(l.zone)} · ${esc(GOALS[l.goal].g)}`))+goBtn('#leads','Match leads'):'No leads waiting.'; }
+  if (/overdue|late|ticket|work/.test(q)){ const r = S.work.filter(w=>!w.done&&daysUntil(w.due)<0); return r.length?`${r.length} overdue tickets:`+ul(r.map(w=>`<b>${esc(w.name)}</b> · ${esc(fullName(P(w.assignee)))} · due ${fmtD(w.due)}`))+goBtn('#work','Open Work & Tickets'):'Nothing is overdue.'; }
+  if (zone && /cover|who|trainers? in|work in/.test(q)){ const r = S.trainers.filter(t=>t.zone===zone&&t.status!=='On leave'); return `${r.length} trainers are based in ${zone}:`+ul(r.map(t=>`<b>${esc(fullName(t))}</b> · ${t.specs.join(', ')} · ${st[t.id].booked}/${t.capacity} booked`),12); }
+  const words = q.replace(/[^a-z ]/g,' ').split(/\s+/).filter(w=>w.length>2);
+  const t = S.trainers.find(t=>words.includes(t.last.toLowerCase())&&words.includes(t.first.toLowerCase())) || S.trainers.find(t=>words.includes(t.last.toLowerCase()));
+  if (t){ const w = compWorst(t); return `<b>${esc(fullName(t))}</b> · ${t.status} · ${esc(t.zone)} · ${t.specs.join(' & ')}<br>${st[t.id].booked}/${t.capacity} booked this week, ${st[t.id].done} done, ${st[t.id].clients} clients, ${t.rating.toFixed(1)}★. Documents: ${w==='ok'?'all current':w==='warn'?'something expires within 30 days':'<b>something has expired</b>'}. Phone ${esc(t.phone)}.<br><button class="btn sm go" data-act="trainer" data-id="${t.id}">Open profile</button>`; }
+  const c = S.clients.find(c=>words.includes(c.last.toLowerCase())&&words.includes(c.first.toLowerCase()));
+  if (c){ const nx = nextSession(c); return `<b>${esc(fullName(c))}</b> · ${esc(c.street)}, ${esc(c.zone)} · ${clientState(c)}<br>Trains with ${esc(fullName(T(c.trainerId)))} · ${c.remaining} sessions left on ${esc(PACKAGES[c.pkg].short)} · next session ${nx?DOW[dayIndex(nx)]+' '+fmtT(nx.start):'not booked'}.<br><button class="btn sm go" data-act="client" data-id="${c.id}">Open client</button>`; }
+  return 'I didn\'t find an answer for that. I can tell you who is free at a given time and zone, whose documents are expiring, top trainers, at-risk clients, renewals, payroll, revenue, leads and overdue tickets, or look up any trainer or client by name.';
+}
+
+/* ================= overlays ================= */
+function closeLayer(){ $('#layer').innerHTML=''; }
+function openDrawer(html){ $('#layer').innerHTML = `<div class="scrim" data-act="close"></div><aside class="drawer" role="dialog" aria-modal="true">${html}</aside>`; $('#layer .x')?.focus(); }
+function openModal(html){ $('#layer').innerHTML = `<div class="scrim" data-act="close"></div><div class="modal" role="dialog" aria-modal="true">${html}</div>`; $('#layer .modal input, #layer .modal select, #layer .modal button')?.focus(); }
+let toastTimer;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.hidden=false; clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.hidden=true,2600); }
+
+function trainerDrawer(id){
+  const t = T(id); if (!t) return; const st = stats(); const b = st[t.id]; const p = payFor(t,st);
+  const clients = S.clients.filter(c=>c.trainerId===t.id);
+  const upcoming = S.sessions.filter(s=>s.trainerId===t.id && ['Scheduled','In progress'].includes(live(s))).sort((a,b)=>a.date.localeCompare(b.date)||a.start-b.start).slice(0,6);
+  const edit = can('team');
+  openDrawer(`<div class="d-h">${av(t)}<div><h2>${esc(fullName(t))}</h2><p>${t.id} · ${esc(t.zone)} · ${t.radius} mi radius · hired ${fmtD(t.hired,{month:'short',year:'numeric'})}</p></div><button class="x" data-act="close" aria-label="Close">${I.x}</button></div>
+    <div class="toolbar"><span class="pill ${TRAINER_PILL[t.status]}">${t.status}</span>${t.specs.map(s=>`<span class="chip" style="--tc:${TYPE_COLORS[s]}">${esc(s)}</span>`).join(' ')}
+      ${edit?`<select id="tStatusSel" data-act-change="setStatus" data-id="${t.id}" aria-label="Change status" style="margin-left:auto;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:6px 8px">${['Active','Onboarding','On leave'].map(s=>`<option ${s===t.status?'selected':''}>${s}</option>`).join('')}</select>`:''}</div>
+    <div class="d-stats">
+      <div><small>Clients</small><b class="num">${b.clients}</b></div><div><small>Booked / cap</small><b class="num">${b.booked}/${t.capacity}</b></div><div><small>Rating</small><b class="num">${t.rating.toFixed(1)}★</b></div>
+      <div><small>Completed</small><b class="num">${b.done}</b></div><div><small>Revenue wk</small><b class="num">${moneyK(b.rev)}</b></div><div><small>${can('payroll')?'Pay (proj.)':'Training'}</small><b class="num">${can('payroll')?money(p.proj):trainingPct(t)+'%'}</b></div>
+    </div>
+    <div class="sec"><h3>Contact</h3><div class="list"><div><span class="num">${esc(t.phone)}</span><span class="end"><button class="btn sm" data-act="copy" data-v="${esc(t.phone)}">Copy number</button></span></div>${can('payroll')?`<div><small>Pay rate</small><span class="end num">${money(t.rate)} per session</span></div>`:''}</div></div>
+    <div class="sec"><h3>Documents</h3><div class="list">${compItems(t).map(x=>`<div><span>${esc(x.label)}</span><span class="end"><small>${fmtD(x.exp,{month:'short',day:'numeric',year:'numeric'})}</small><span class="pill ${x.state}">${x.days<0?'Expired':x.days<=30?x.days+'d left':'Current'}</span>${x.state!=='ok'&&edit?`<button class="btn sm" data-act="renew" data-id="${t.id}" data-k="${x.k}" data-reopen="1">Renew</button>`:''}</span></div>`).join('')}</div></div>
+    <div class="sec"><h3>Coming up</h3><div class="list">${upcoming.length?upcoming.map(s=>`<button data-act="session" data-id="${s.id}"><span class="num" style="width:92px;color:var(--muted)">${DOW[dayIndex(s)]} ${fmtT(s.start)}</span><span>${esc(fullName(C(s.clientId)))}</span><span class="end"><span class="chip" style="--tc:${TYPE_COLORS[s.type]}">${esc(s.type)}</span></span></button>`).join(''):'<div><small>Nothing else booked this week.</small></div>'}</div></div>
+    <div class="sec"><h3>Clients (${clients.length})</h3><div class="list">${clients.length?clients.map(c=>{const s=clientState(c);return `<button data-act="client" data-id="${c.id}">${av(c)}<span>${esc(fullName(c))}<br><small>${esc(c.street)}, ${esc(c.zone)}</small></span><span class="end"><span class="pill ${CLIENT_PILL[s]}">${s}</span></span></button>`;}).join(''):'<div><small>No clients yet. Assign one from Leads & Matching.</small></div>'}</div></div>
+    <div class="actions"><button class="btn" data-act="viewWeek" data-id="${t.id}">Weekly calendar</button></div>`);
+}
+function trainerOptions(selected, zone){
+  const st = stats();
+  return [...S.trainers].filter(t=>t.status!=='On leave').sort((a,b)=>(b.zone===zone)-(a.zone===zone)||util(a,st)-util(b,st))
+    .map(t=>`<option value="${t.id}" ${t.id===selected?'selected':''}>${esc(fullName(t))} · ${esc(t.zone)} · ${st[t.id].booked}/${t.capacity} booked</option>`).join('');
+}
+function progressChart(c){
+  const r = rng(hash(c.id)); const spec = GOALS[c.goal].s; const n = 8;
+  let label, unit, v, stepFn;
+  if (spec==='Weight Loss'){ label='Body weight'; unit='lb'; v=170+Math.round(r()*70); stepFn=()=>-(0.4+r()*1.6); }
+  else if (['Strength','Sports Performance','HIIT','Boxing'].includes(spec)){ label='Goblet squat'; unit='lb'; v=20+Math.round(r()*25); stepFn=()=>r()<.2?0:2.5*(1+Math.floor(r()*2)); }
+  else { label='Mobility score'; unit='points'; v=38+Math.round(r()*20); stepFn=()=>Math.round(r()*5); }
+  const pts=[]; for(let i=0;i<n;i++){ pts.push(+v.toFixed(1)); v+=stepFn(); }
+  const W=440,H=130,pl=40,pr=40,pt=18,pb=22; const lo=Math.min(...pts), hi=Math.max(...pts); const pd=(hi-lo)*.2||2; const a=Math.floor(lo-pd), b=Math.ceil(hi+pd);
+  const x=i=>pl+i*(W-pl-pr)/(n-1), y=val=>pt+(H-pt-pb)*(1-(val-a)/(b-a));
+  const line=pts.map((p,i)=>`${i?'L':'M'}${x(i).toFixed(1)},${y(p).toFixed(1)}`).join(' ');
+  const delta=pts[n-1]-pts[0];
+  return `<div class="sec"><h3>${label} · last 8 weeks</h3><svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${label} trend">
+    <defs><linearGradient id="pg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--cyan);stop-opacity:.35"/><stop offset="1" style="stop-color:var(--cyan);stop-opacity:0"/></linearGradient></defs>
+    ${[a,b].map(v=>`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${pl-6}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)">${v}</text>`).join('')}
+    <path d="${line} L${x(n-1)},${H-pb} L${x(0)},${H-pb} Z" fill="url(#pg)"/><path d="${line}" fill="none" stroke="var(--cyan)" stroke-width="2.5"/>
+    <circle cx="${x(n-1)}" cy="${y(pts[n-1])}" r="5" fill="var(--lime)"/><text x="${x(n-1)}" y="${y(pts[n-1])-10}" text-anchor="middle" font-size="12" font-weight="600" fill="var(--lime)">${pts[n-1]}</text>
+    <text x="${pl}" y="${H-5}" font-size="10.5" fill="var(--muted)">8 wks ago</text><text x="${W-pr}" y="${H-5}" text-anchor="end" font-size="10.5" fill="var(--muted)">This week</text>
+  </svg><p class="note">${delta>=0?'+':''}${delta.toFixed(1)} ${unit} since the first check-in shown. Example trend.</p></div>`;
+}
+function clientDrawer(id){
+  const c = C(id); if (!c) return; const s = clientState(c); const p = PACKAGES[c.pkg];
+  const sess = S.sessions.filter(x=>x.clientId===c.id).sort((a,b)=>a.date.localeCompare(b.date)||a.start-b.start);
+  const edit = can('dispatch');
+  openDrawer(`<div class="d-h">${av(c)}<div><h2>${esc(fullName(c))}</h2><p>${c.id} · ${esc(c.street)}, ${esc(c.zone)} · client since ${fmtD(c.since,{month:'short',year:'numeric'})}</p></div><button class="x" data-act="close" aria-label="Close">${I.x}</button></div>
+    <div class="toolbar"><span class="pill ${CLIENT_PILL[s]}">${s}</span><span class="chip" style="--tc:${TYPE_COLORS[GOALS[c.goal].s]}">${esc(GOALS[c.goal].g)}</span><span class="chip">${esc(c.slot)}</span></div>
+    <div class="d-stats"><div><small>Package</small><b style="font-size:20px">${esc(p.short)}</b></div><div><small>Sessions left</small><b class="num" style="color:${c.remaining<=2?'var(--warn)':'inherit'}">${c.remaining}/${p.size}</b></div><div><small>Per session</small><b class="num">${money(p.per)}</b></div></div>
+    ${edit?`<div class="sec"><h3>Trainer</h3><div class="field"><select id="reassign" aria-label="Assigned trainer" data-act-change="reassignClient" data-id="${c.id}"><option value="">Not assigned</option>${trainerOptions(c.trainerId, c.zone)}</select></div>
+      <p class="note" style="margin-top:6px">Trainers in ${esc(c.zone)} are listed first, least booked at the top. Upcoming sessions move with the client.</p></div>`:`<div class="sec"><h3>Trainer</h3><p>${esc(fullName(T(c.trainerId)))}</p></div>`}
+    <div class="sec"><h3>This week</h3><div class="list">${sess.length?sess.map(x=>`<button data-act="session" data-id="${x.id}"><span class="num" style="width:92px;color:var(--muted)">${DOW[dayIndex(x)]} ${fmtT(x.start)}</span><span>${esc(x.type)} with ${esc(fullName(T(x.trainerId)))}</span><span class="end"><span class="pill ${STATUS_PILL[live(x)]}">${live(x)}</span></span></button>`).join(''):`<div><small>No sessions this week. Last session: ${ago(lastSession(c)).toLowerCase()}.</small></div>`}</div></div>
+    ${progressChart(c)}
+    ${edit?`<div class="actions"><button class="btn" data-act="togglePause" data-id="${c.id}">${c.status==='Paused'?'Resume client':'Pause client'}</button><button class="btn primary" data-act="renewPkg" data-id="${c.id}">Renew ${esc(p.short)} (+${p.size})</button></div>`:''}`);
+}
+function conflicts(trainerId, date, start, dur, exceptId){
+  return S.sessions.some(s=>s.id!==exceptId && s.trainerId===trainerId && s.date===date && live(s)!=='Cancelled' && start < s.start+s.dur+30 && start+dur > s.start-30);
+}
+function sessionModal(id){
+  const s = S.sessions.find(x=>x.id===id); if (!s) return; const c = C(s.clientId), t = T(s.trainerId); const L = live(s); const st = stats();
+  const dispatcher = can('dispatch'); const mine = s.trainerId===asId;
+  const cands = dispatcher ? S.trainers.filter(x=>x.id!==t.id && x.status!=='On leave' && compWorst(x)!=='bad' && !conflicts(x.id,s.date,s.start,s.dur,s.id))
+    .sort((a,b)=>(b.zone===c.zone)-(a.zone===c.zone) || (b.specs.includes(s.type))-(a.specs.includes(s.type)) || util(a,st)-util(b,st)).slice(0,15) : [];
+  openModal(`<div class="d-h" style="align-items:flex-start"><div><h2>${esc(s.type)} session</h2><p>${fmtD(s.date,{weekday:'long',month:'long',day:'numeric'})} · ${fmtTL(s.start)} – ${fmtTL(s.start+s.dur)}</p></div><button class="x" data-act="close" aria-label="Close">${I.x}</button></div>
+    <div class="list">
+      <button data-act="${dispatcher?'client':'noop'}" data-id="${c.id}">${av(c)}<span><b>${esc(fullName(c))}</b><br><small>${esc(c.street)}, ${esc(c.zone)}</small></span><span class="end"><small>${esc(PACKAGES[c.pkg].short)} · ${c.remaining} left</small></span></button>
+      <button data-act="${can('team')?'trainer':'noop'}" data-id="${t.id}">${av(t)}<span><b>${esc(fullName(t))}</b><br><small>${esc(t.phone)} · ${esc(t.zone)}</small></span><span class="end"><span class="pill ${STATUS_PILL[L]}">${L}</span></span></button>
+    </div>
+    ${dispatcher||mine?`<div class="actions" style="justify-content:flex-start">
+      ${L!=='Completed'?`<button class="btn" data-act="setSess" data-id="${s.id}" data-v="Completed">Mark completed</button>`:''}
+      ${L!=='No-show'?`<button class="btn" data-act="setSess" data-id="${s.id}" data-v="No-show">No-show</button>`:''}
+      ${L!=='Cancelled'?`<button class="btn danger" data-act="setSess" data-id="${s.id}" data-v="Cancelled">Cancel session</button>`:''}
+      ${['Cancelled','No-show','Completed'].includes(s.status)?`<button class="btn ghost" data-act="setSess" data-id="${s.id}" data-v="Scheduled">Undo</button>`:''}</div>`:''}
+    ${dispatcher&&L==='Scheduled'?`<div class="sec"><h3>Send a different trainer</h3>
+      ${cands.length?`<div class="toolbar"><select id="reassignSess" aria-label="Replacement trainer" style="flex:1;min-width:0;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:8px">${cands.map(x=>`<option value="${x.id}">${esc(fullName(x))} · ${esc(x.zone)}${x.specs.includes(s.type)?' · '+esc(s.type):''} · ${st[x.id].booked}/${x.capacity}</option>`).join('')}</select><button class="btn primary" data-act="reassignSess" data-id="${s.id}">Reassign</button></div>
+      <p class="note" style="margin-top:6px">Only trainers free at this time (with a 30-minute travel buffer) and with current documents are listed. Same zone first.</p>`:'<p class="note">No other trainer is free at this time.</p>'}</div>`:''}`);
+}
+function formModal(kind){
+  const zo = ZONES.map(z=>`<option>${z}</option>`).join(''); const so = SPECS.map(s=>`<option>${s}</option>`).join('');
+  const go = GOALS.map((g,i)=>`<option value="${i}">${g.g}</option>`).join(''); const po = Object.entries(PACKAGES).map(([k,p])=>`<option value="${k}">${p.name} · ${money(p.per)}/session</option>`).join('');
+  const slot = Object.keys(SLOTS).map(s=>`<option>${s}</option>`).join('');
+  const f = (id,label,inner,full) => `<label class="field ${full?'full':''}" for="${id}">${label}${inner}</label>`;
+  const inp = (id,ph='',type='text',extra='') => `<input id="${id}" name="${id}" type="${type}" placeholder="${ph}" ${extra}>`;
+  const sel = (id,opts) => `<select id="${id}" name="${id}">${opts}</select>`;
+  const people = STAFF.map(u=>({id:u.id,n:fullName(P(u.id))+' · '+u.title}));
+  let title, body;
+  if (kind==='trainer'){ title='Add a trainer'; body = f('f_first','First name',inp('f_first','','text','required'))+f('f_last','Last name',inp('f_last','','text','required'))+f('f_zone','Home zone',sel('f_zone',zo))+f('f_cert','Certification',sel('f_cert',CERTS.map(c=>`<option>${c}</option>`).join('')))+f('f_s1','Main specialty',sel('f_s1',so))+f('f_s2','Second specialty',sel('f_s2',SPECS.map((s,i)=>`<option ${i===1?'selected':''}>${s}</option>`).join('')))+f('f_rate','Pay per session ($)',inp('f_rate','','number','value="45" min="20" max="150"'))+f('f_cap','Max sessions per week',inp('f_cap','','number','value="20" min="1" max="45"'))+f('f_phone','Phone',inp('f_phone','(404) 555-0100','tel'),true); }
+  else if (kind==='client'){ title='Add a client'; body = f('f_first','First name',inp('f_first','','text','required'))+f('f_last','Last name',inp('f_last','','text','required'))+f('f_street','Street address',inp('f_street','123 Maple Ave','text','required'),true)+f('f_zone','Zone',sel('f_zone',zo))+f('f_slot','Preferred time',sel('f_slot',slot))+f('f_goal','Goal',sel('f_goal',go),true)+f('f_pkg','Package',sel('f_pkg',po),true)+f('f_trainer','Trainer',sel('f_trainer','<option value="">Assign later</option>'+trainerOptions('', ZONES[0])),true); }
+  else if (kind==='work'){ title='New ticket'; body = f('f_name','What needs doing',inp('f_name','','text','required'),true)+f('f_area','Area',sel('f_area',AREAS.map(a=>`<option>${a}</option>`).join('')))+f('f_pri','Priority',sel('f_pri','<option>High</option><option selected>Normal</option><option>Low</option>'))+f('f_due','Due',inp('f_due','','date',`value="${ymd(addDays(today0(),1))}"`))+f('f_who','Assign to',sel('f_who',people.map(p=>`<option value="${p.id}" ${p.id===asId?'selected':''}>${esc(p.n)}</option>`).join(''))); }
+  else { title='Add a lead'; body = f('f_first','First name',inp('f_first','','text','required'))+f('f_last','Last name',inp('f_last','','text','required'))+f('f_zone','Zone',sel('f_zone',zo))+f('f_slot','Preferred time',sel('f_slot',slot))+f('f_goal','Goal',sel('f_goal',go),true)+f('f_pkg','Interested in',sel('f_pkg',po),true)+f('f_source','Source',sel('f_source',SOURCES.map(s=>`<option>${s}</option>`).join('')))+f('f_note','Notes',inp('f_note','Equipment, injuries, preferences')); }
+  openModal(`<div class="d-h"><h2>${title}</h2><button class="x" data-act="close" aria-label="Close">${I.x}</button></div>
+    <form id="addForm" data-kind="${kind}"><div class="form">${body}</div><div class="actions" style="margin-top:16px"><button type="button" class="btn ghost" data-act="close">Cancel</button><button type="submit" class="btn primary">Save</button></div></form>`);
+}
+function copyText(v){
+  const fallback = () => { openModal(`<div class="d-h"><h2>Copy this</h2><button class="x" data-act="close" aria-label="Close">${I.x}</button></div><textarea id="copyArea" readonly style="width:100%;min-height:220px;background:var(--panel-2);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:10px;font:12px ui-monospace,monospace">${esc(v)}</textarea><p class="note">Automatic copying was blocked. The text is selected, so press Ctrl+C or ⌘C.</p>`); setTimeout(()=>{const a=$('#copyArea'); if(a){a.focus();a.select();}},30); };
+  try { navigator.clipboard.writeText(v).then(()=>toast('Copied'), fallback); } catch(e){ fallback(); }
+}
+
+/* ================= events ================= */
+const RESULTS = {trainers:trainerRows, clients:clientRows, compliance:compRows, work:workRows, schedule:()=>ui.mode==='board'?boardHtml():weekHtml()};
+function refreshResults(){ const fn = RESULTS[currentView()]; const el = $('#results'); if (fn && el) el.innerHTML = fn(); }
+function commit(msg){ save(); render(); if (msg) toast(msg); }
+function setAs(id){ asId = id; aiLog = []; $('#aiLayer').innerHTML=''; closeLayer(); if (location.hash.slice(1)!==currentView()) location.hash = '#'+currentView(); render(); window.scrollTo(0,0); }
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!e.target.closest('.search')) $('#gresults').hidden = true;
+  if (!e.target.closest('.me')) { const m = $('#me .menu'); if (m) m.remove(); }
+  if (!el) return;
+  const a = el.dataset.act, id = el.dataset.id;
+  if (el.tagName==='SELECT' || el.tagName==='INPUT') return;
+  switch(a){
+    case 'noop': break;
+    case 'close': closeLayer(); break;
+    case 'trainer': e.preventDefault(); $('#gresults').hidden=true; trainerDrawer(id); break;
+    case 'client': e.preventDefault(); $('#gresults').hidden=true; clientDrawer(id); break;
+    case 'session': e.preventDefault(); sessionModal(id); break;
+    case 'go': {
+      const href = el.dataset.href || el.getAttribute('href'); const v = href.slice(1);
+      if (v==='clients') Object.assign(ui,{cState:el.dataset.f||'',cQ:'',cZone:'',cTrainer:''});
+      if (v==='trainers') Object.assign(ui,{tSort:el.dataset.sort||'name',tStatus:el.dataset.tstatus||(el.dataset.sort?'Active':''),tQ:'',tZone:'',tSpec:''});
+      if (v==='compliance') ui.compIssues=true;
+      saveUi(); if (el.dataset.href){ location.hash = href; } break; }
+    case 'schedToday': ui.day = todayIdx(); ui.mode='board'; saveUi(); break;
+    case 'bell': if (can('performance')){ if (location.hash!=='#dashboard') location.hash='#dashboard'; setTimeout(()=>$('#attention')?.scrollIntoView({behavior:'smooth',block:'start'}),60); } else { const al = attention(); location.hash = al[0]?.go || '#today'; } break;
+    case 'menu': { const box = $('#me'); const ex = box.querySelector('.menu'); if (ex){ ex.remove(); break; }
+      box.insertAdjacentHTML('beforeend', `<div class="menu"><a href="#settings">Settings & appearance</a>${asId!=='U0'?'<button data-act="viewAs" data-id="U0">Back to owner view</button>':''}<button data-act="ai">Ask Declara AI</button><button data-act="reset">Reset sample data</button></div>`); break; }
+    case 'viewAs': setAs(id); toast(id==='U0'?'Back to owner view':'Previewing as '+fullName(P(id))); break;
+    case 'ai': aiOpen(); break;
+    case 'aiClose': $('#aiLayer').innerHTML=''; break;
+    case 'aiAsk': aiLog.push({who:'me',q:el.dataset.q},{who:'bot',html:aiAnswer(el.dataset.q)}); aiOpen(); break;
+    case 'aiGo': $('#aiLayer').innerHTML=''; break;
+    case 'day': ui.day = +el.dataset.i; saveUi(); render(); break;
+    case 'mode': ui.mode = el.dataset.m; saveUi(); render(); break;
+    case 'viewWeek': ui.mode='week'; ui.sTrainer=id; saveUi(); closeLayer(); if (location.hash!=='#schedule') location.hash='#schedule'; else render(); break;
+    case 'moreClients': ui.cLimit += 80; refreshResults(); break;
+    case 'compIssues': ui.compIssues = el.dataset.v==='1'; saveUi(); render(); break;
+    case 'wShow': ui.wShow = el.dataset.v; saveUi(); render(); break;
+    case 'chan': ui.chan = el.dataset.v; saveUi(); render(); break;
+    case 'resTab': ui.resTab = el.dataset.v; saveUi(); render(); break;
+    case 'repTab': ui.repTab = el.dataset.v; saveUi(); render(); break;
+    case 'look': S.look = el.dataset.v; commit(`${LOOKS[S.look].name} look on`); break;
+    case 'trainingOf': trainingModal(id); break;
+    case 'graduate': { const t = T(id); t.status='Active'; closeLayer(); commit(`${fullName(t)} is now active`); break; }
+    case 'addTrainer': formModal('trainer'); break;
+    case 'addClient': formModal('client'); break;
+    case 'addLead': formModal('lead'); break;
+    case 'addWork': formModal('work'); break;
+    case 'reset': openModal(`<h2>Reset sample data?</h2><p class="note" style="font-size:15px">This replaces every trainer, client, lead, ticket, message and schedule change saved in this browser with fresh sample data.</p><div class="actions"><button class="btn ghost" data-act="close">Keep my data</button><button class="btn primary" data-act="doReset">Reset</button></div>`); break;
+    case 'doReset': lsDel(KEY); S = generate(20261001 + Math.floor(Math.random()*1000)); save(); closeLayer(); setAs('U0'); toast('Sample data reset'); break;
+    case 'copy': copyText(el.dataset.v); break;
+    case 'csv': copyText(payrollCsv()); break;
+    case 'csvProd': copyText(prodCsv()); break;
+    case 'toggleLead': ui.openLead = ui.openLead===id ? null : id; render(); break;
+    case 'dropLead': { const l = S.leads.find(x=>x.id===id); S.leads = S.leads.filter(x=>x.id!==id); commit(l?`Archived ${fullName(l)}`:''); break; }
+    case 'assignLead': {
+      const l = S.leads.find(x=>x.id===id), t = T(el.dataset.t); if (!l||!t) break;
+      S.clients.push({id:'C'+String(S.nextId.c++).padStart(4,'0'), first:l.first, last:l.last, zone:l.zone, street:'Address pending', trainerId:t.id, pkg:l.pkg, remaining:PACKAGES[l.pkg].size, goal:l.goal, slot:l.slot, status:'Active', lapsed:false, since:ymd(today0()), lastSeen:ymd(today0())});
+      const src = S.sales.bySource[l.source]; if (src){ src.signed++; src.consults = Math.max(src.consults, src.signed); src.pkgRev += PACKAGES[l.pkg].per*PACKAGES[l.pkg].size; }
+      S.leads = S.leads.filter(x=>x.id!==id); ui.openLead=null;
+      commit(`${fullName(l)} assigned to ${fullName(t)}`); break; }
+    case 'renew': {
+      const t = T(id); const k = el.dataset.k; const t0 = today0();
+      if (k==='cert') t.certExp = ymd(addDays(t0,730)); if (k==='cpr') t.cprExp = ymd(addDays(t0,730)); if (k==='bg') t.bgCheck = ymd(t0); if (k==='ins') t.insExp = ymd(addDays(t0,365));
+      e.stopPropagation(); commit(`Renewed for ${fullName(t)}`); if (el.dataset.reopen) trainerDrawer(id); break; }
+    case 'setSess': {
+      const s = S.sessions.find(x=>x.id===id); const c = C(s.clientId); const before = live(s);
+      const counted = x => x==='Completed'||x==='No-show';
+      s.status = el.dataset.v; const after = live(s);
+      if (c && counted(after) && !counted(before)) c.remaining = Math.max(0,c.remaining-1);
+      if (c && !counted(after) && counted(before)) c.remaining = Math.min(PACKAGES[c.pkg].size, c.remaining+1);
+      commit(`Session marked ${after.toLowerCase()}`); sessionModal(id); break; }
+    case 'reassignSess': { const s = S.sessions.find(x=>x.id===id); const nt = $('#reassignSess').value; const t = T(nt); s.trainerId = nt; if (!t.specs.includes(s.type)) s.type = t.specs[0]; commit(`${fullName(t)} is now covering this session`); sessionModal(id); break; }
+    case 'togglePause': { const c = C(id); c.status = c.status==='Paused'?'Active':'Paused'; if (c.status==='Paused') S.sessions.forEach(s=>{ if (s.clientId===c.id && live(s)==='Scheduled') s.status='Cancelled'; }); commit(c.status==='Paused'?`${fullName(c)} paused. Upcoming sessions cancelled.`:`${fullName(c)} resumed`); clientDrawer(id); break; }
+    case 'renewPkg': { const c = C(id); c.remaining += PACKAGES[c.pkg].size; commit(`Renewed ${PACKAGES[c.pkg].short} for ${fullName(c)}`); clientDrawer(id); break; }
+  }
+});
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.dataset.f){ ui[el.dataset.f] = el.value; saveUi(); refreshResults(); return; }
+  if (el.dataset.tick){ const k = asId+'|'+ymd(today0()); const s = new Set(S.ticks[k]||[]); el.checked ? s.add(el.dataset.tick) : s.delete(el.dataset.tick); S.ticks = {[k]:[...s], ...Object.fromEntries(Object.entries(S.ticks).filter(([kk])=>kk!==k && kk.endsWith(ymd(today0()))))}; commit(); return; }
+  if (el.dataset.done){ const w = S.work.find(x=>x.id===el.dataset.done); w.done = el.checked; commit(w.done?'Ticket done':'Ticket reopened'); return; }
+  if (el.dataset.mod){ const t = T(el.dataset.t); t.training[el.dataset.mod] = el.checked; save(); render(); if ($('#layer .modal')) trainingModal(t.id); return; }
+  if (el.dataset.access){ const a = S.access[el.dataset.access] ||= {}; a[el.dataset.k] = el.checked; commit('Access updated'); return; }
+  const a = el.dataset.actChange;
+  if (a==='setStatus'){ const t = T(el.dataset.id); t.status = el.value; commit(`${fullName(t)} set to ${t.status}`); trainerDrawer(t.id); }
+  if (a==='reassignClient'){ const c = C(el.dataset.id); const nt = el.value || null; c.trainerId = nt;
+    if (nt){ const t = T(nt); S.sessions.forEach(s=>{ if (s.clientId===c.id && live(s)==='Scheduled' && !conflicts(nt,s.date,s.start,s.dur,s.id)){ s.trainerId = nt; if (!t.specs.includes(s.type)) s.type=t.specs[0]; } }); }
+    else S.sessions.forEach(s=>{ if (s.clientId===c.id && live(s)==='Scheduled') s.status='Cancelled'; });
+    commit(nt?`${fullName(c)} now trains with ${fullName(T(nt))}`:`${fullName(c)} unassigned`); clientDrawer(c.id); }
+  if (el.id==='f_zone' && $('#f_trainer')) $('#f_trainer').innerHTML = '<option value="">Assign later</option>'+trainerOptions('', el.value);
+});
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (el.dataset.f && el.type==='search'){ ui[el.dataset.f] = el.value; if (el.dataset.f==='cQ') ui.cLimit=80; saveUi(); refreshResults(); return; }
+  if (el.id==='gsearch'){
+    const q = el.value.trim().toLowerCase(); const box = $('#gresults');
+    if (q.length<2){ box.hidden=true; return; }
+    const ts = can('team') ? S.trainers.filter(t=>(fullName(t)+' '+t.id).toLowerCase().includes(q)).slice(0,5).map(t=>`<button data-act="trainer" data-id="${t.id}">${av(t)}<span>${esc(fullName(t))}</span><small>Trainer · ${esc(t.zone)}</small></button>`) : [];
+    const pool = can('dispatch') ? S.clients : S.clients.filter(c=>c.trainerId===asId);
+    const cs = pool.filter(c=>(fullName(c)+' '+c.id+' '+c.street).toLowerCase().includes(q)).slice(0,5).map(c=>`<button data-act="${can('dispatch')?'client':'noop'}" data-id="${c.id}">${av(c)}<span>${esc(fullName(c))}</span><small>Client · ${esc(c.zone)}</small></button>`);
+    box.innerHTML = [...ts,...cs].join('') || '<div class="empty">No matches</div>'; box.hidden=false;
+  }
+});
+document.addEventListener('submit', e => {
+  const f = e.target; e.preventDefault();
+  if (f.id==='aiForm'){ const q = $('#aiQ').value.trim(); if (!q) return; aiLog.push({who:'me',q},{who:'bot',html:aiAnswer(q)}); aiOpen(); return; }
+  if (f.id==='chatForm'){ const v = $('#chatText').value.trim(); if (!v) return; (S.chat[ui.chan] ||= []).push({by:asId, at:Date.now(), text:v}); commit(); setTimeout(()=>$('#chatText')?.focus(),0); return; }
+  if (f.id==='bizForm'){ const fd = Object.fromEntries(new FormData(f)); S.biz = (fd.f_biz||'').trim() || S.biz; S.ownerName = (fd.f_owner||'').trim(); commit('Saved'); return; }
+  if (f.id!=='addForm') return;
+  const fd = Object.fromEntries(new FormData(f)); const kind = f.dataset.kind; const t0 = today0();
+  if (kind==='work'){
+    const name = (fd.f_name||'').trim(); if (!name){ toast('Describe the ticket to save it'); return; }
+    S.work.push({id:'W'+(S.nextId.w++), name, area:fd.f_area, priority:fd.f_pri, due:fd.f_due||ymd(t0), assignee:fd.f_who, done:false, created:ymd(t0)});
+    closeLayer(); commit('Ticket added'); return;
+  }
+  const first = (fd.f_first||'').trim(), last = (fd.f_last||'').trim();
+  if (!first || !last){ toast('Add a first and last name to save'); return; }
+  if (kind==='trainer'){
+    const training = Object.fromEntries(MODULES.map(m=>[m.id,false]));
+    S.trainers.push({id:'T'+String(S.nextId.t++).padStart(3,'0'), first, last, zone:fd.f_zone, specs:[fd.f_s1, fd.f_s2===fd.f_s1 ? SPECS.find(s=>s!==fd.f_s1) : fd.f_s2], cert:fd.f_cert, certExp:ymd(addDays(t0,730)), cprExp:ymd(addDays(t0,730)), bgCheck:ymd(t0), insExp:ymd(addDays(t0,365)), status:'Onboarding', hired:ymd(t0), rate:Math.max(1,+fd.f_rate||45), capacity:Math.max(1,+fd.f_cap||20), radius:12, rating:5.0, phone:(fd.f_phone||'').trim()||'Not provided', training});
+    closeLayer(); commit(`${first} ${last} added as onboarding`);
+  } else if (kind==='client'){
+    S.clients.push({id:'C'+String(S.nextId.c++).padStart(4,'0'), first, last, zone:fd.f_zone, street:(fd.f_street||'').trim()||'Address pending', trainerId:fd.f_trainer||null, pkg:fd.f_pkg, remaining:PACKAGES[fd.f_pkg].size, goal:+fd.f_goal, slot:fd.f_slot, status:'Active', lapsed:false, since:ymd(t0), lastSeen:ymd(t0)});
+    closeLayer(); commit(`${first} ${last} added`);
+  } else {
+    S.leads.unshift({id:'L'+(S.nextId.l++), first, last, zone:fd.f_zone, goal:+fd.f_goal, slot:fd.f_slot, pkg:fd.f_pkg, source:fd.f_source, received:Date.now(), note:(fd.f_note||'').trim()});
+    const src = S.sales.bySource[fd.f_source]; if (src) src.leads++;
+    closeLayer(); commit('Lead added. Open it to find trainers.');
+  }
+});
+document.addEventListener('keydown', e => { if (e.key==='Escape'){ closeLayer(); $('#aiLayer').innerHTML=''; $('#gresults').hidden=true; } });
+window.addEventListener('hashchange', () => { closeLayer(); render(); window.scrollTo(0,0); });
+
+/* ================= boot ================= */
+load(); tick(); render();
+setInterval(() => {
+  tick();
+  if (S.weekStart !== ymd(weekStart(new Date()))){ buildWeek(S); save(); }
+  const busy = document.activeElement && ['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName);
+  if (!busy && !$('#layer').innerHTML && ['dashboard','schedule','today'].includes(currentView())) render(); else renderShell();
+}, 60000);
+})();
+</script>
+
+</body>
+</html>
