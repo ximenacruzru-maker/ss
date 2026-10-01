@@ -611,12 +611,35 @@ function parseRoster(text){
   const rows = parseRows(String(text||'').trim()); if (!rows.length) return [];
   let iN=0, iB=1, iA=2; const h = rows[0].map(c=>c.toLowerCase());
   if (h.some(c=>/name/.test(c))){ iN = h.findIndex(c=>/name/.test(c)); iB = h.findIndex(c=>/birth|dob/.test(c)); iA = h.findIndex(c=>/address/.test(c)); rows.shift(); }
+  const DATE = /(\d{1,2})\/(\d{1,2})\/(\d{4})/;
   return rows.map(r => {
-    const name = (r[iN]||'').replace(/\s+/g,' ').trim(); if (!name) return null;
-    const parts = name.split(' '); let birthday = '';
-    const m = (r[iB]||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); if (m) birthday = m[3]+'-'+pad(+m[1])+'-'+pad(+m[2]);
-    return {first:parts[0], last:parts.slice(1).join(' '), birthday, address:(iA>=0 ? r[iA]||'' : '').replace(/\s+/g,' ').trim()};
+    const name = (r[iN]||'').replace(/\s+/g,' ').trim(); if (!name || DATE.test(name)) return null;
+    let di = iB>=0 && DATE.test(r[iB]||'') ? iB : r.findIndex(c=>DATE.test(c));
+    const m = di>=0 ? r[di].match(DATE) : null; const birthday = m ? m[3]+'-'+pad(+m[1])+'-'+pad(+m[2]) : '';
+    const rest = iA>=0 ? r.slice(iA).filter((c,k)=>k+iA!==di && k+iA!==iN) : r.filter((c,k)=>k!==iN && k!==di);
+    const parts = name.split(' ');
+    return {first:parts[0], last:parts.slice(1).join(' '), birthday, address:rest.join(' ').replace(/\s+/g,' ').trim()};
   }).filter(Boolean);
+}
+/* PDF upload: pdf.js (loaded on demand from cdnjs) reads the text in this browser; each line is split into cells at wide gaps */
+const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+function loadScript(src){ return new Promise((res,rej)=>{ if ([...document.scripts].some(x=>x.src===src)) return res(); const el = document.createElement('script'); el.src = src; el.onload = res; el.onerror = () => rej(new Error('Could not load '+src)); document.head.appendChild(el); }); }
+async function pdfToText(file){
+  await loadScript(PDFJS+'pdf.min.js'); await loadScript(PDFJS+'pdf.worker.min.js');
+  const lib = window.pdfjsLib; lib.GlobalWorkerOptions.workerSrc = PDFJS+'pdf.worker.min.js';
+  const doc = await lib.getDocument({data:new Uint8Array(await file.arrayBuffer()), isEvalSupported:false}).promise;
+  const out = [];
+  for (let n=1; n<=doc.numPages; n++){
+    const items = (await (await doc.getPage(n)).getTextContent()).items.filter(i=>i.str && i.str.trim()).map(i=>({s:i.str, x:i.transform[4], y:i.transform[5], w:i.width}));
+    const lines = [];
+    for (const it of items.sort((a,b)=>b.y-a.y)){ let L = lines.find(l=>Math.abs(l.y-it.y)<3); if (!L) lines.push(L={y:it.y, items:[]}); L.items.push(it); }
+    for (const L of lines.sort((a,b)=>b.y-a.y)){
+      const its = L.items.sort((a,b)=>a.x-b.x); const cells = []; let cur = its[0].s, end = its[0].x+its[0].w;
+      for (const it of its.slice(1)){ const gap = it.x-end; if (gap > 9){ cells.push(cur); cur = it.s; } else cur += (gap > 1.5 && !/\s$/.test(cur) ? ' ' : '') + it.s; end = it.x+it.w; }
+      cells.push(cur); out.push(cells.map(c=>c.trim()).join('\t'));
+    }
+  }
+  return out.join('\n');
 }
 const SPECS = ['Strength','HIIT','Weight Loss','Mobility & Seniors','Pre/Postnatal','Sports Performance','Post-Rehab','Boxing','Yoga & Pilates'];
 const SPEC_WORDS = {'Strength':/strength|lifting/,'HIIT':/hiit|conditioning|interval/,'Weight Loss':/weight|fat loss/,'Mobility & Seniors':/mobility|senior|balance|older/,'Pre/Postnatal':/prenatal|postnatal|postpartum|pregnan/,'Sports Performance':/sport|athlet|race|marathon/,'Post-Rehab':/rehab|injur|surgery/,'Boxing':/box/,'Yoga & Pilates':/yoga|pilates|flexib/};
@@ -1260,7 +1283,7 @@ function vReports(){
 
 /* ================= Business: Trainer roster ================= */
 function vTrainers(){
-  return head('People','Trainer roster',`${S.trainers.length} trainers across ${ZONES.length} service zones.`,`<button class="btn primary" data-act="addTrainer">+ Add trainer</button>`) + `<section class="panel"><div class="toolbar">
+  return head('People','Trainer roster',`${S.trainers.length} trainers across ${ZONES.length} service zones.${S.rosterSrc?'':' These are sample trainers. Upload your roster PDF to use your real team.'}`,`<label class="btn" for="rosterFileTop">Upload roster PDF</label><input id="rosterFileTop" type="file" accept=".pdf,application/pdf,.csv,.tsv,.txt,text/csv" hidden><button class="btn primary" data-act="addTrainer">+ Add trainer</button>`) + `<section class="panel"><div class="toolbar">
     <input type="search" id="tQ" data-f="tQ" placeholder="Search name, ID or phone" value="${esc(ui.tQ)}" aria-label="Search trainers">
     <select id="tZone" data-f="tZone" aria-label="Zone">${opt(ZONES,ui.tZone,'All zones')}</select>
     <select id="tSpec" data-f="tSpec" aria-label="Specialty">${opt(SPECS,ui.tSpec,'All specialties')}</select>
@@ -1523,9 +1546,9 @@ function vSettings(){
     <div class="field"><span>Logo</span><div class="toolbar">${S.logo?`<img src="${S.logo}" alt="Current logo" style="max-height:44px;max-width:160px;background:#fff;border-radius:6px;padding:4px">`:''}<label class="btn" for="f_logo">${S.logo?'Replace logo':'Upload logo'}</label><input id="f_logo" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" hidden>${S.logo?'<button type="button" class="btn ghost danger" data-act="dropLogo">Remove</button>':''}</div><small class="muted">PNG, JPG, SVG or WebP, under 500 KB. Shown at the top of the sidebar.</small></div>
     <div class="actions" style="grid-column:1/-1;justify-content:flex-start"><button class="btn primary" type="submit">Save</button></div></form></section>`;
   const rosterPanel = `<section class="panel"><div class="panel-h"><h2>Trainer roster</h2><span class="meta">${S.rosterSrc ? `${S.rosterSrc.length} real trainers from your roster. Clients, sessions, pay and documents are still sample data.` : 'Using 100 sample trainers. Import your roster to replace them.'}</span></div>
-    <p class="note" style="margin-bottom:10px">Copy the Name, Birthday and Address columns from your Google Sheet (header row included) and paste them here, or choose a CSV export. The data stays in this browser.</p>
+    <p class="note" style="margin-bottom:10px">Upload the roster PDF (Name, Birthday, Address), or a CSV export, or paste the rows from your Google Sheet. The file is read in this browser and nothing is sent anywhere.</p>
     <textarea id="rosterText" class="fld" rows="6" style="width:100%;font:13px ui-monospace,monospace" placeholder="Name&#9;Birthday&#9;Address"></textarea>
-    <div class="actions" style="justify-content:flex-start;margin-top:10px"><label class="btn" for="rosterFile">Choose CSV</label><input id="rosterFile" type="file" accept=".csv,.tsv,.txt,text/csv" hidden><button class="btn primary" data-act="importRoster">Import roster</button>${S.rosterSrc?'<button class="btn ghost danger" data-act="dropRoster">Go back to sample trainers</button>':''}</div></section>`;
+    <div class="actions" style="justify-content:flex-start;margin-top:10px"><label class="btn primary" for="rosterFile">Upload roster PDF</label><input id="rosterFile" type="file" accept=".pdf,application/pdf,.csv,.tsv,.txt,text/csv" hidden><button class="btn" data-act="importRoster">Import pasted rows</button>${S.rosterSrc?'<button class="btn ghost danger" data-act="dropRoster">Go back to sample trainers</button>':''}</div></section>`;
   return head('Administration','Settings',`${LOOKS[S.look]?.name||'Blush'} theme · ${(FONTS[S.font]||FONTS.athletic).name} typeface · ${STAFF.length} office staff · ${S.trainers.length} trainers`) + biz + rosterPanel + looks + access;
 }
 
@@ -1586,6 +1609,22 @@ function closeLayer(){ $('#layer').innerHTML=''; }
 function openDrawer(html){ $('#layer').innerHTML = `<div class="scrim" data-act="close"></div><aside class="drawer" role="dialog" aria-modal="true">${html}</aside>`; $('#layer .x')?.focus(); }
 function openModal(html){ $('#layer').innerHTML = `<div class="scrim" data-act="close"></div><div class="modal" role="dialog" aria-modal="true">${html}</div>`; $('#layer .modal input, #layer .modal select, #layer .modal button')?.focus(); }
 let toastTimer, pendingRoster = null;
+function confirmRoster(r){
+  if (!r.length){ toast('No trainers found. The file needs Name, Birthday and Address columns.'); return; }
+  pendingRoster = r;
+  openModal(`<h2>Load ${r.length} trainers?</h2><p class="note" style="font-size:15px">This replaces the current trainers with your roster. Clients, sessions, pay and documents are rebuilt as sample data around them. Your settings, logo and theme stay. The data stays in this browser.</p>
+    <div class="list" style="max-height:260px;overflow:auto">${r.map(x=>`<div><span style="min-width:0"><b>${esc(x.first+' '+x.last)}</b><br><small>${esc(x.address||'No address')}</small></span><span class="end"><small>${x.birthday?fmtD(x.birthday,{month:'short',day:'numeric',year:'numeric'}):'No birthday'} · ${esc(zoneFor(x.address).zone)}</small></span></div>`).join('')}</div>
+    <div class="actions"><button class="btn ghost" data-act="close">Cancel</button><button class="btn primary" data-act="doImportRoster">Load ${r.length} trainers</button></div>`);
+}
+async function handleRosterFile(file){
+  try {
+    let text;
+    if (/\.pdf$/i.test(file.name) || file.type==='application/pdf'){ toast('Reading PDF…'); text = await pdfToText(file); }
+    else text = await file.text();
+    const box = $('#rosterText'); if (box) box.value = text;
+    confirmRoster(parseRoster(text));
+  } catch (e){ toast('Could not read that file. Check your internet connection, or paste the rows instead.'); }
+}
 function toast(msg){ const t=$('#toast'); t.textContent=msg; t.hidden=false; clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.hidden=true,2600); }
 
 function trainerDrawer(id){
@@ -1740,8 +1779,7 @@ document.addEventListener('click', e => {
     case 'addWork': formModal('work'); break;
     case 'reset': openModal(`<h2>Reset sample data?</h2><p class="note" style="font-size:15px">This replaces every trainer, client, lead, ticket, message and schedule change saved in this browser with fresh sample data.</p><div class="actions"><button class="btn ghost" data-act="close">Keep my data</button><button class="btn primary" data-act="doReset">Reset</button></div>`); break;
     case 'doReset': regenerate(S.rosterSrc, 20261001 + Math.floor(Math.random()*1000)); save(); closeLayer(); setAs('U0'); toast(S.rosterSrc?'Sample activity rebuilt around your trainers':'Sample data reset'); break;
-    case 'importRoster': { const r = parseRoster($('#rosterText').value); if (!r.length){ toast('No trainers found. Paste rows of Name, Birthday, Address.'); break; } pendingRoster = r;
-      openModal(`<h2>Load ${r.length} trainers?</h2><p class="note" style="font-size:15px">This replaces the current trainers with your roster: ${r.slice(0,4).map(x=>esc(x.first+' '+x.last)).join(', ')}${r.length>4?' and '+(r.length-4)+' more':''}. Clients, sessions, pay and documents are rebuilt as sample data around them. Your settings, logo and theme stay.</p><div class="actions"><button class="btn ghost" data-act="close">Cancel</button><button class="btn primary" data-act="doImportRoster">Load trainers</button></div>`); break; }
+    case 'importRoster': { confirmRoster(parseRoster($('#rosterText').value)); break; }
     case 'doImportRoster': if (pendingRoster){ regenerate(pendingRoster); pendingRoster=null; save(); closeLayer(); setAs('U0'); location.hash='#trainers'; toast(`${S.trainers.length} trainers loaded`); } break;
     case 'dropRoster': regenerate(null); save(); setAs('U0'); toast('Back to sample trainers'); break;
     case 'copy': copyText(el.dataset.v); break;
@@ -1777,7 +1815,7 @@ document.addEventListener('change', e => {
   if (el.dataset.tick){ const k = asId+'|'+ymd(today0()); const s = new Set(S.ticks[k]||[]); el.checked ? s.add(el.dataset.tick) : s.delete(el.dataset.tick); S.ticks = {[k]:[...s], ...Object.fromEntries(Object.entries(S.ticks).filter(([kk])=>kk!==k && kk.endsWith(ymd(today0()))))}; commit(); return; }
   if (el.dataset.done){ const w = S.work.find(x=>x.id===el.dataset.done); w.done = el.checked; commit(w.done?'Ticket done':'Ticket reopened'); return; }
   if (el.dataset.mod){ const t = T(el.dataset.t); t.training[el.dataset.mod] = el.checked; save(); render(); if ($('#layer .modal')) trainingModal(t.id); return; }
-  if (el.id==='rosterFile' && el.files[0]){ const rd = new FileReader(); rd.onload = () => { $('#rosterText').value = rd.result; toast(`${parseRoster(rd.result).length} trainers found. Press Import roster.`); }; rd.readAsText(el.files[0]); return; }
+  if ((el.id==='rosterFile' || el.id==='rosterFileTop') && el.files[0]){ handleRosterFile(el.files[0]); el.value=''; return; }
   if (el.id==='f_logo' && el.files[0]){
     const file = el.files[0]; if (file.size > 500*1024){ toast('That logo is over 500 KB. Try a smaller PNG or SVG.'); return; }
     const rd = new FileReader(); rd.onload = () => { S.logo = rd.result; commit('Logo saved'); }; rd.onerror = () => toast('Could not read that file. Try another image.'); rd.readAsDataURL(file); return;
