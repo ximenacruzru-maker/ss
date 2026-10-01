@@ -676,9 +676,10 @@ const SECTIONS = [
   {k:'dispatch',l:'Dispatch & clients',n:'Everyone\'s schedule, the client book and lead matching'},
   {k:'payroll',l:'Trainer payroll',n:'Everyone\'s pay rates and weekly pay'},
   {k:'team',l:'Team development',n:'Roster, training progress and every trainer\'s documents'},
+  {k:'insurance',l:'Business insurance',n:'Franchise policies, premium audits and certificates'},
   {k:'work_manager',l:'Runs the work queue',n:'Sees and assigns every ticket'}
 ];
-const ROLE_DEFAULTS = {owner:['performance','dispatch','payroll','team','work_manager'],admin:['performance','dispatch','payroll','team','work_manager'],coordinator:['dispatch','team']};
+const ROLE_DEFAULTS = {owner:['performance','dispatch','payroll','team','insurance','work_manager'],admin:['performance','dispatch','payroll','team','insurance','work_manager'],coordinator:['dispatch','team']};
 const MODULES = [
   {id:'m1',name:'Company standards & code of conduct',hrs:1},
   {id:'m2',name:'In-home session protocol: arrival, setup, sanitizing',hrs:1.5},
@@ -910,7 +911,7 @@ function load(){
 function save(){ lsSet(KEY, JSON.stringify(S)); }
 /* Rebuild trainers (real roster or sample) and the sample activity around them, keeping the business settings */
 function regenerate(roster, seed){
-  const keep = {}; for (const k of ['biz','tagline','logo','ownerName','look','font','themeV','brandV','taglineV','access']) if (S && k in S) keep[k] = S[k];
+  const keep = {}; for (const k of ['biz','tagline','logo','ownerName','look','font','themeV','brandV','taglineV','access','ins']) if (S && k in S) keep[k] = S[k];
   S = Object.assign(generate(seed || 20261001, roster), keep, {rosterV:1});
 }
 function nextBirthday(t){
@@ -992,6 +993,8 @@ function attention(){
   if (un) items.push({n:un, s:'warn', t:'Clients without a trainer', d:'Reassign from the client profile', go:'#clients', f:'Unassigned'});
   if (renew) items.push({n:renew, s:'info', t:'Packages ending soon', d:'2 or fewer sessions left. Time to renew.', go:'#clients', f:'Renew soon'});
   if (over) items.push({n:over, s:'info', t:'Trainers over capacity', d:'Booked past their weekly session limit', go:'#trainers', sort:'util'});
+  if (can('insurance')){ const I = ensureIns(); const due = I.audits.filter(a=>a.status!=='Closed' && daysUntil(a.due)<=21); if (due.length) items.push({n:due.length, s:due.some(a=>daysUntil(a.due)<0)?'bad':'warn', t:due.length===1?'Insurance audit due soon':'Insurance audits due soon', d:due.map(a=>insPolicyDef(a.policy).type+' · '+fmtD(a.due)).join(', '), go:'#insurance'});
+    const exp = I.policies.filter(p=>p.end && daysUntil(p.end)<=45); if (exp.length) items.push({n:exp.length, s:exp.some(p=>daysUntil(p.end)<0)?'bad':'warn', t:'Business policies renewing', d:exp.map(p=>insPolicyDef(p.id).type).join(', '), go:'#insurance'}); }
   const bw = upcomingBirthdays(7); if (bw.length) items.push({n:bw.length, s:'info', t:bw.length===1?'Trainer birthday this week':'Trainer birthdays this week', d:bw.map(x=>x.t.first+' ('+(x.b.inDays===0?'today':x.b.date.toLocaleDateString('en-US',{weekday:'short'}))+')').join(', '), go:'#today'});
   if (under) items.push({n:under, s:'info', t:'Trainers under 40% booked', d:'Good fits for new leads', go:'#trainers', sort:'utilAsc'});
   return items;
@@ -1010,6 +1013,7 @@ const I = {
   schedule:ic('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'),
   clients:ic('<circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6M17 4a4 4 0 0 1 0 8M22 21c0-3-1.5-5-4-5.6"/>'),
   leads:ic('<circle cx="10" cy="8" r="4"/><path d="M3 21c0-4 3-6 7-6 1.3 0 2.5.2 3.5.6M19 14v6M16 17h6"/>'),
+  insurance:ic('<path d="M12 3a9 9 0 0 1 9 9H3a9 9 0 0 1 9-9Z"/><path d="M12 12v6a2 2 0 0 0 4 0"/>'),
   resources:ic('<path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2Zm0 0A2 2 0 0 0 6 22h14"/>'),
   trainers:ic('<path d="M6.5 6.5v11M17.5 6.5v11M3 9v6M21 9v6M6.5 12h11"/>'),
   training:ic('<path d="m2 9 10-5 10 5-10 5Z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/>'),
@@ -1034,6 +1038,7 @@ const VIEWS = {
   clients:{label:()=>'Client Book', title:'<em>Client</em> Book', icon:I.clients, show:()=>can('dispatch')},
   leads:{label:()=>'Leads & Matching', title:'Lead <em>Matching</em>', icon:I.leads, show:()=>can('dispatch')},
   payroll:{label:()=>'Trainer Payroll', title:'Trainer <em>Payroll</em>', icon:I.pay, show:()=>can('payroll')},
+  insurance:{label:()=>'Business Insurance', title:'Business <em>Insurance</em>', icon:I.insurance, show:()=>can('insurance')},
   resources:{label:()=>'Resources', title:'Business <em>Resources</em>', icon:I.resources, show:()=>true},
   trainers:{label:()=>'Trainer Roster', title:'<em>Trainer</em> Roster', icon:I.trainers, show:()=>can('team')},
   training:{label:()=>'Training', title:'<em>Training</em>', icon:I.training, show:()=>true},
@@ -1043,7 +1048,7 @@ const VIEWS = {
 const NAV = [
   {h:'Workspace', items:['today','work','chat']},
   {h:'Performance', items:['dashboard','sales','reports']},
-  {h:'Business Management', items:['schedule','clients','leads','payroll','resources']},
+  {h:'Business Management', items:['schedule','clients','leads','payroll','insurance','resources']},
   {h:'Team Development', items:['trainers','training','compliance']},
   {h:'', items:['settings']}
 ];
@@ -1051,7 +1056,7 @@ const ui = Object.assign({
   tQ:'', tZone:'', tSpec:'', tStatus:'', tSort:'name',
   cQ:'', cZone:'', cState:'', cTrainer:'', cLimit:80,
   day:null, mode:'board', sZone:'', sQ:'', sTrainer:'',
-  compIssues:true, compQ:'', openLead:null, wQ:'', wArea:'', wShow:'open', chan:'general', resTab:'forms', repTab:'zones', trTab:'onboarding'
+  compIssues:true, compQ:'', openLead:null, wQ:'', wArea:'', wShow:'open', chan:'general', resTab:'forms', insTab:'policies', repTab:'zones', trTab:'onboarding'
 }, (() => { try { return JSON.parse(lsGet(KEY+'-ui')||'{}'); } catch(e){ return {}; } })());
 ui.cLimit = 80; ui.openLead = null;
 const saveUi = () => lsSet(KEY+'-ui', JSON.stringify(ui));
@@ -1088,7 +1093,7 @@ function render(){
   applyLook(); renderShell(); document.title = appName();
   const v = currentView();
   const banner = asId!=='U0' ? `<div class="preview">Previewing ${esc(appName())} as <b>${esc(fullName(me()))}</b> (${esc(me().title)}). They only see the sections switched on for them in Settings.<button class="btn sm" data-act="viewAs" data-id="U0">Back to owner view</button></div>` : '';
-  $('#view').innerHTML = banner + ({today:vToday, work:vWork, chat:vChat, dashboard:vDash, sales:vSales, reports:vReports, schedule:vSchedule, clients:vClients, leads:vLeads, payroll:vPayroll, resources:vResources, trainers:vTrainers, training:vTraining, compliance:vCompliance, settings:vSettings})[v]();
+  $('#view').innerHTML = banner + ({today:vToday, work:vWork, chat:vChat, dashboard:vDash, sales:vSales, reports:vReports, schedule:vSchedule, clients:vClients, leads:vLeads, payroll:vPayroll, insurance:vInsurance, resources:vResources, trainers:vTrainers, training:vTraining, compliance:vCompliance, settings:vSettings})[v]();
   if (v==='chat'){ const s = $('.stream'); if (s) s.scrollTop = s.scrollHeight; }
 }
 function tick(){ const n = new Date(); $('#clock').textContent = n.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}).toUpperCase()+'  |  '+n.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); }
@@ -1446,6 +1451,174 @@ function prodCsv(){
   return lines.map(csvLine).join('\n');
 }
 
+/* ================= Business: Business insurance (franchise policies & premium audits) ================= */
+const INS_POLICIES = [
+  {id:'gl', type:'General liability', req:'$1,000,000 per occurrence / $2,000,000 aggregate', basis:'Gross receipts', aiReq:true},
+  {id:'pl', type:'Professional liability (trainer E&O)', req:'$1,000,000 / $2,000,000', basis:'Gross receipts', aiReq:true},
+  {id:'am', type:'Abuse & molestation', req:'$1,000,000', basis:'Flat', aiReq:true},
+  {id:'wc', type:'Workers’ compensation & employer’s liability', req:'Statutory / $1,000,000 each accident', basis:'Payroll', aiReq:false},
+  {id:'auto', type:'Hired & non-owned auto', req:'$1,000,000 combined single limit', basis:'Number of drivers', aiReq:true},
+  {id:'umb', type:'Umbrella / excess liability', req:'$1,000,000', basis:'Flat', aiReq:true},
+  {id:'eq', type:'Business equipment (inland marine)', req:'Replacement cost of trainer kits', basis:'Equipment value', aiReq:false},
+  {id:'cyber', type:'Cyber liability', req:'$250,000', basis:'Flat', aiReq:false}
+];
+const INS_DOCS = [
+  ['payreg','Payroll journal or payroll register for the audit period'],
+  ['f941','Federal Form 941, all four quarters'],
+  ['stateq','State quarterly wage reports (California: DE 9 and DE 9C)'],
+  ['w2','Form W-2 and W-3 totals'],
+  ['f1099','Form 1099-NEC for every contractor, with their W-9'],
+  ['subcoi','Certificates of insurance for 1099 contractors covering the audit period'],
+  ['pl','Profit & loss statement or general ledger showing gross receipts'],
+  ['officer','Owner and officer payroll, with any elected exclusions'],
+  ['ot','Overtime records (the overtime premium is often excluded from WC payroll)'],
+  ['drivers','List of employees and contractors who drive their own vehicles for work']
+];
+const AUDIT_STATUS = ['Not started','Gathering documents','Submitted','Closed'];
+function ensureIns(){
+  if (S.ins) return S.ins;
+  const t0 = today0(); const start = new Date(t0.getFullYear()-1, t0.getMonth(), 1); const end = new Date(t0.getFullYear(), t0.getMonth(), 0);
+  S.ins = {
+    policies: INS_POLICIES.map(p=>({id:p.id, carrier:'', policyNo:'', start:'', end:'', limits:'', premium:'', req:p.req, ai:false, docs:{dec:false, coi:false}, notes:''})),
+    period:{start:ymd(start), end:ymd(end)}, receipts:{}, classes:[
+      {id:'c1', code:'', desc:'Personal trainers (W-2 employees)', amount:null, auto:'w2'},
+      {id:'c2', code:'8810', desc:'Clerical office employees', amount:null},
+      {id:'c3', code:'', desc:'Owners and executive officers', amount:null}],
+    wtype:{}, w9:{}, docs:{},
+    audits:[
+      {id:'A1', policy:'gl', kind:'Mail-in (voluntary)', due:ymd(addDays(t0,21)), status:'Not started', auditor:'', result:'', notes:''},
+      {id:'A2', policy:'wc', kind:'Phone or virtual', due:ymd(addDays(t0,35)), status:'Not started', auditor:'', result:'', notes:''}],
+    nextAudit:3
+  };
+  return S.ins;
+}
+const insPolicyDef = id => INS_POLICIES.find(p=>p.id===id);
+function policyState(p){
+  const d = insPolicyDef(p.id);
+  if (!p.carrier || !p.policyNo) return {s:'info', l:'Needs details'};
+  if (p.end && daysUntil(p.end) < 0) return {s:'bad', l:'Expired'};
+  if (d.aiReq && !p.ai) return {s:'warn', l:'Franchisor not named'};
+  if (p.end && daysUntil(p.end) <= 45) return {s:'warn', l:'Renews in '+daysUntil(p.end)+'d'};
+  return {s:'ok', l:'In force'};
+}
+function auditMonths(){
+  const I = ensureIns(); const out = []; let d = parse(I.period.start); const e = parse(I.period.end);
+  while (d <= e && out.length < 24){ out.push(ymd(d).slice(0,7)); d = new Date(d.getFullYear(), d.getMonth()+1, 1); }
+  return out;
+}
+function weeklyRevenueEstimate(){ const all = [...S.history.map(h=>h.rev), S.sessions.filter(billable).reduce((a,s)=>a+sessionRevenue(s),0)]; return all.reduce((a,b)=>a+b,0)/all.length; }
+function monthEstimate(ym){ const [y,m] = ym.split('-').map(Number); const days = new Date(y, m, 0).getDate(); return Math.round(weeklyRevenueEstimate()*days/7); }
+const isW2 = t => (ensureIns().wtype[t.id] || 'W-2') === 'W-2';
+const coiCurrent = t => daysUntil(t.insExp) >= 0;
+function contractorTotals(){
+  const st = stats(); const yr = t => payFor(t,st).proj*52;
+  const working = S.trainers.filter(t=>t.status!=='On leave');
+  const w2 = working.filter(isW2), c = working.filter(t=>!isW2(t));
+  return {w2, c, w2Pay:w2.reduce((a,t)=>a+yr(t),0), insured:c.filter(coiCurrent).reduce((a,t)=>a+yr(t),0), uninsured:c.filter(t=>!coiCurrent(t)).reduce((a,t)=>a+yr(t),0), uninsuredList:c.filter(t=>!coiCurrent(t))};
+}
+function classAmount(c){ if (c.amount!=null && c.amount!=='') return +c.amount; if (c.auto==='w2') return Math.round(contractorTotals().w2Pay); return 0; }
+const isEst = c => (c.amount==null || c.amount==='') && c.auto==='w2';
+function vInsurance(){
+  const I = ensureIns(); const tab = ['policies','workbook','contractors','audits'].includes(ui.insTab) ? ui.insTab : 'policies';
+  const tabs = `<div class="seg">${[['policies','Policies'],['workbook','Audit workbook'],['contractors','Contractors & COIs'],['audits','Audit tracker']].map(([k,l])=>`<button class="${tab===k?'on':''}" data-act="insTab" data-v="${k}">${l}</button>`).join('')}</div>`;
+  const states = I.policies.map(policyState);
+  const prem = I.policies.reduce((a,p)=>a+(+p.premium||0),0);
+  const renew = I.policies.filter(p=>p.end && daysUntil(p.end)>=0).sort((a,b)=>a.end.localeCompare(b.end))[0];
+  const nextAudit = I.audits.filter(a=>a.status!=='Closed').sort((a,b)=>a.due.localeCompare(b.due))[0];
+  const strip = `<div class="strip">${stat('Policies on file', I.policies.filter(p=>p.carrier&&p.policyNo).length+'<em style="font-style:normal;font-size:20px;color:var(--muted)">/'+I.policies.length+'</em>', 'franchise coverages')}${stat('Franchise requirements', states.filter(x=>x.s==='ok').length+'/'+I.policies.length, 'in force with franchisor named where required', states.some(x=>x.s==='bad')?'bad':states.every(x=>x.s==='ok')?'good':'warn')}${stat('Annual premium', prem?money(prem):'–', prem?'deposit premiums entered':'add premiums to each policy')}${stat('Next audit', nextAudit?fmtD(nextAudit.due):'None', nextAudit?esc(insPolicyDef(nextAudit.policy).type)+' · '+nextAudit.status:'no open audits', nextAudit&&daysUntil(nextAudit.due)<=14?'warn':'')}</div>`;
+  const intro = head('Business','Business insurance','Your franchise policies, what the franchise agreement requires, and everything a premium auditor asks for, in one place.', renew?`<span class="pill info">Next renewal: ${esc(insPolicyDef(renew.id).type)} · ${fmtD(renew.end,{month:'short',day:'numeric',year:'numeric'})}</span>`:'');
+  let body = '';
+  if (tab==='policies'){
+    body = `<section class="panel"><div class="panel-h"><h2>Policies</h2><span class="meta">Click a policy to add the carrier, policy number, term, limits and premium. Requirements are typical franchise minimums; edit them to match your franchise agreement.</span></div>
+    <div class="tablewrap"><table><thead><tr><th>Coverage</th><th>Carrier · policy #</th><th>Term</th><th>Your limits</th><th>Franchise requires</th><th class="r">Premium</th><th>Rated on</th><th>Franchisor named</th><th>Status</th></tr></thead><tbody>
+    ${I.policies.map((p,k)=>{ const d = insPolicyDef(p.id), st = states[k]; return `<tr data-act="insPolicy" data-id="${p.id}"><td><b>${esc(d.type)}</b></td><td>${p.carrier?esc(p.carrier)+'<br><small class="muted">'+esc(p.policyNo||'No policy #')+'</small>':'<span class="muted">Add details</span>'}</td><td style="white-space:nowrap">${p.start&&p.end?fmtD(p.start,{month:'short',day:'numeric',year:'2-digit'})+' – '+fmtD(p.end,{month:'short',day:'numeric',year:'2-digit'}):'<span class="muted">–</span>'}</td><td>${esc(p.limits)||'<span class="muted">–</span>'}</td><td><small>${esc(p.req)}</small></td><td class="r num">${p.premium?money(+p.premium):'–'}</td><td><small>${esc(d.basis)}</small></td><td>${d.aiReq?(p.ai?'<span class="pill ok">Yes</span>':'<span class="pill warn">Not yet</span>'):'<span class="muted">Not required</span>'}</td><td><span class="pill ${st.s}">${st.l}</span></td></tr>`; }).join('')}
+    </tbody></table></div></section>
+    <section class="panel"><div class="panel-h"><h2>Certificates for the franchisor</h2><span class="meta">Most franchise agreements ask for a current certificate naming the franchisor as additional insured, with notice before cancellation, sent at every renewal.</span></div>
+    <div class="list">${I.policies.filter(p=>insPolicyDef(p.id).aiReq).map(p=>`<div><span><b>${esc(insPolicyDef(p.id).type)}</b><br><small>${p.ai?'Franchisor named as additional insured':'Ask your agent to add the franchisor as additional insured'}</small></span><span class="end"><label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" data-ins-doc="${p.id}" data-k="coi" ${p.docs.coi?'checked':''} style="accent-color:var(--lime)"> Certificate sent</label></span></div>`).join('')}</div></section>`;
+  } else if (tab==='workbook'){
+    const months = auditMonths(); const rec = months.map(m=>({m, v: I.receipts[m]!=null && I.receipts[m]!=='' ? +I.receipts[m] : null, est:monthEstimate(m)}));
+    const recTotal = rec.reduce((a,x)=>a+(x.v!=null?x.v:x.est),0), estCount = rec.filter(x=>x.v==null).length;
+    const ct = contractorTotals(); const classTotal = I.classes.reduce((a,c)=>a+classAmount(c),0);
+    body = `<section class="panel"><div class="panel-h"><h2>Audit period</h2><span class="meta">Usually your policy term. Gross receipts rate GL and professional liability; payroll by class code rates workers’ comp.</span></div>
+      <div class="toolbar"><label class="field" for="insStart">From<input type="date" id="insStart" data-ins-period="start" value="${I.period.start}"></label><label class="field" for="insEnd">To<input type="date" id="insEnd" data-ins-period="end" value="${I.period.end}"></label>
+      <span class="count"><button class="btn" data-act="insCsv">Copy workbook as CSV</button> <button class="btn primary" data-act="insSummary">Copy audit summary</button></span></div></section>
+    <div class="grid">
+      <section class="panel c6"><div class="panel-h"><h2>Gross receipts</h2><span class="meta">${estCount?`${estCount} month${estCount===1?'':'s'} still estimated from booked sessions. Replace with figures from your books.`:'All months entered from your books.'}</span></div>
+        <div class="tablewrap"><table><thead><tr><th>Month</th><th class="r">Gross receipts</th><th></th></tr></thead><tbody>
+        ${rec.map(x=>`<tr><td>${parse(x.m+'-01').toLocaleDateString('en-US',{month:'long',year:'numeric'})}</td><td class="r"><input type="number" min="0" step="1" class="fld num" data-ins-rec="${x.m}" value="${x.v!=null?x.v:''}" placeholder="${x.est}" aria-label="Gross receipts ${x.m}" style="width:130px;text-align:right${x.v==null?';font-style:italic':''}"></td><td>${x.v==null?'<span class="pill mute">Estimate</span>':'<span class="pill ok">Entered</span>'}</td></tr>`).join('')}
+        <tr class="total"><td>Total</td><td class="r num">${money(recTotal)}</td><td></td></tr></tbody></table></div></section>
+      <section class="panel c6"><div class="panel-h"><h2>Payroll by class code</h2><span class="meta">Use the class codes printed on your workers’ comp policy.</span><div class="right"><button class="btn sm" data-act="insAddClass">+ Add class</button></div></div>
+        <div class="tablewrap"><table><thead><tr><th>Code</th><th>Description</th><th class="r">Annual payroll</th></tr></thead><tbody>
+        ${I.classes.map(c=>`<tr><td><input class="fld" data-ins-class="${c.id}" data-k="code" value="${esc(c.code)}" placeholder="Code" aria-label="Class code" style="width:74px"></td><td><input class="fld" data-ins-class="${c.id}" data-k="desc" value="${esc(c.desc)}" aria-label="Description" style="width:100%;min-width:160px"></td><td class="r"><input type="number" min="0" class="fld num" data-ins-class="${c.id}" data-k="amount" value="${c.amount??''}" placeholder="${c.auto==='w2'?Math.round(ct.w2Pay):'0'}" aria-label="Annual payroll" style="width:120px;text-align:right${isEst(c)?';font-style:italic':''}"></td></tr>`).join('')}
+        <tr class="total"><td colspan="2">Total payroll</td><td class="r num">${money(classTotal)}</td></tr></tbody></table></div>
+        <p class="note" style="margin-top:8px">The W-2 trainer line starts as an estimate: this week’s projected trainer pay × 52. Enter the payroll register total to replace it.</p></section>
+      <section class="panel c12"><div class="panel-h"><h2>Contractors (1099)</h2><span class="meta">Auditors usually add pay to uninsured contractors to your payroll unless you have their certificate of insurance.</span><div class="right"><button class="btn sm" data-act="insTab" data-v="contractors">Review contractors</button></div></div>
+        <div class="strip">${stat('W-2 trainers', ct.w2.length, money(ct.w2Pay)+' est. annual pay')}${stat('1099 trainers', ct.c.length, 'paid as contractors')}${stat('Insured contractors', money(ct.insured), 'current liability certificate', 'good')}${stat('Uninsured contractors', money(ct.uninsured), ct.uninsuredList.length?ct.uninsuredList.length+' without a current certificate':'none', ct.uninsured?'bad':'')}</div></section>
+      <section class="panel c12"><div class="panel-h"><h2>Drivers</h2></div><p class="note" style="font-size:14px">${S.trainers.filter(t=>t.status!=='On leave').length} trainers drive their own vehicles to clients’ homes. Hired & non-owned auto is usually rated on this count, so keep it current with your agent.</p></section>
+    </div>`;
+  } else if (tab==='contractors'){
+    const ct = contractorTotals(); const st = stats();
+    body = `<section class="panel"><div class="panel-h"><h2>Worker type & certificates</h2><span class="meta">${ct.uninsuredList.length?`<span class="pill bad">${ct.uninsuredList.length} contractors without a current certificate</span>`:'Every contractor has a current certificate.'} California applies a strict test to contractor status; check with your accountant before paying trainers on a 1099.</span></div>
+    <div class="tablewrap"><table><thead><tr><th>Trainer</th><th>Worker type</th><th>Liability certificate</th><th>W-9 on file</th><th class="r">Est. annual pay</th></tr></thead><tbody>
+    ${[...S.trainers].sort((a,b)=>a.last.localeCompare(b.last)).map(t=>{ const c = !isW2(t); const d = daysUntil(t.insExp); return `<tr><td><div class="who">${av(t)}<div><b>${esc(fullName(t))}</b><small>${esc(t.zone)}</small></div></div></td>
+      <td><select data-ins-wtype="${t.id}" aria-label="Worker type for ${esc(fullName(t))}" class="fld"><option ${!c?'selected':''}>W-2</option><option ${c?'selected':''}>1099</option></select></td>
+      <td>${c?`<span class="pill ${d<0?'bad':d<=30?'warn':'ok'}">${d<0?'Expired':d<=30?d+'d left':'Current'}</span> <small class="muted">${fmtD(t.insExp,{month:'short',day:'numeric',year:'numeric'})}</small>`:'<span class="muted">Covered by your WC policy</span>'}</td>
+      <td>${c?`<input type="checkbox" data-ins-w9="${t.id}" ${ensureIns().w9[t.id]?'checked':''} aria-label="W-9 on file" style="width:18px;height:18px;accent-color:var(--lime)">`:'<span class="muted">–</span>'}</td>
+      <td class="r num">${money(payFor(t,st).proj*52)}</td></tr>`; }).join('')}
+    </tbody></table></div><p class="note" style="margin-top:8px">Certificate dates come from each trainer’s liability insurance in Certifications & Insurance. Renew them there.</p></section>`;
+  } else {
+    body = `<section class="panel"><div class="panel-h"><h2>Audits</h2><div class="right"><button class="btn primary" data-act="insAddAudit">+ Add audit</button></div></div>
+    <div class="tablewrap"><table><thead><tr><th>Policy</th><th>Type</th><th>Due</th><th>Status</th><th>Auditor</th><th>Result</th><th></th></tr></thead><tbody>
+    ${I.audits.sort((a,b)=>a.due.localeCompare(b.due)).map(a=>{ const d = daysUntil(a.due); return `<tr><td><b>${esc(insPolicyDef(a.policy).type)}</b></td><td>${esc(a.kind)}</td><td style="white-space:nowrap">${fmtD(a.due,{month:'short',day:'numeric',year:'numeric'})}${a.status!=='Closed'?` <span class="pill ${d<0?'bad':d<=14?'warn':'mute'}">${d<0?Math.abs(d)+'d late':d===0?'Today':d+'d'}</span>`:''}</td>
+      <td><select class="fld" data-ins-audit="${a.id}" data-k="status" aria-label="Audit status">${AUDIT_STATUS.map(s=>`<option ${s===a.status?'selected':''}>${s}</option>`).join('')}</select></td>
+      <td><input class="fld" data-ins-audit="${a.id}" data-k="auditor" value="${esc(a.auditor)}" placeholder="Name, phone or email" aria-label="Auditor" style="width:180px"></td>
+      <td><input class="fld" data-ins-audit="${a.id}" data-k="result" value="${esc(a.result)}" placeholder="e.g. +$420 or −$180" aria-label="Result" style="width:140px"></td>
+      <td><button class="btn sm ghost danger" data-act="insDelAudit" data-id="${a.id}">Remove</button></td></tr>`; }).join('') || '<tr><td colspan="7" class="empty">No audits yet.</td></tr>'}
+    </tbody></table></div></section>
+    <section class="panel"><div class="panel-h"><h2>Audit packet checklist</h2><span class="meta">${INS_DOCS.filter(([k])=>I.docs[k]).length} of ${INS_DOCS.length} ready</span></div>
+    <div class="prog"><div class="bar"><i style="width:${INS_DOCS.filter(([k])=>I.docs[k]).length/INS_DOCS.length*100}%"></i></div></div>
+    <div class="checks">${INS_DOCS.map(([k,l])=>`<label class="check ${I.docs[k]?'done':''}" for="insdoc_${k}"><input type="checkbox" id="insdoc_${k}" data-ins-check="${k}" ${I.docs[k]?'checked':''}><span>${esc(l)}</span></label>`).join('')}</div></section>`;
+  }
+  return intro + strip + tabs + body;
+}
+function insPolicyModal(id){
+  const p = ensureIns().policies.find(x=>x.id===id), d = insPolicyDef(id);
+  const f = (k,l,type='text',ph='') => `<label class="field" for="ip_${k}">${l}<input id="ip_${k}" name="${k}" type="${type}" value="${esc(p[k]??'')}" placeholder="${ph}"></label>`;
+  openModal(`<div class="d-h"><div><h2>${esc(d.type)}</h2><p>Rated on ${esc(d.basis.toLowerCase())}${d.aiReq?' · franchisor must be named as additional insured':''}</p></div><button class="x" data-act="close" aria-label="Close">${I.x}</button></div>
+    <form id="insPolicyForm" data-id="${id}"><div class="form">${f('carrier','Carrier')}${f('policyNo','Policy number')}${f('start','Term starts','date')}${f('end','Term ends','date')}${f('limits','Your limits','text','e.g. $1M / $2M')}${f('premium','Annual premium ($)','number')}
+    <label class="field full" for="ip_req">Franchise agreement requires<input id="ip_req" name="req" value="${esc(p.req)}"></label>
+    <label class="field full" for="ip_notes">Notes<input id="ip_notes" name="notes" value="${esc(p.notes)}" placeholder="Agent, deductibles, endorsements"></label>
+    <label class="check" for="ip_ai"><input type="checkbox" id="ip_ai" name="ai" ${p.ai?'checked':''}><span>Franchisor named as additional insured</span></label>
+    <label class="check" for="ip_dec"><input type="checkbox" id="ip_dec" name="dec" ${p.docs.dec?'checked':''}><span>Declarations page on file</span></label></div>
+    <div class="actions" style="margin-top:14px"><button type="button" class="btn ghost" data-act="close">Cancel</button><button type="submit" class="btn primary">Save policy</button></div></form>`);
+}
+function openAuditModal(id){
+  const a = ensureIns().audits.find(x=>x.id===id);
+  openModal(`<div class="d-h"><h2>Audit</h2><button class="x" data-act="close" aria-label="Close">${I.x}</button></div><form id="auditForm" data-id="${id}"><div class="form">
+    <label class="field full" for="au_policy">Policy<select id="au_policy" name="policy">${INS_POLICIES.map(p=>`<option value="${p.id}" ${p.id===a.policy?'selected':''}>${esc(p.type)}</option>`).join('')}</select></label>
+    <label class="field" for="au_kind">Type<select id="au_kind" name="kind">${['Mail-in (voluntary)','Phone or virtual','In person'].map(k=>`<option ${k===a.kind?'selected':''}>${k}</option>`).join('')}</select></label>
+    <label class="field" for="au_due">Due<input type="date" id="au_due" name="due" value="${a.due}"></label></div>
+    <div class="actions" style="margin-top:14px"><button type="button" class="btn ghost" data-act="close">Cancel</button><button type="submit" class="btn primary">Save audit</button></div></form>`);
+}
+function insCsv(){
+  const I = ensureIns(); const lines = [['Section','Item','Code','Amount','Source']];
+  for (const m of auditMonths()){ const v = I.receipts[m]; lines.push(['Gross receipts', m, '', v!=null&&v!==''?v:monthEstimate(m), v!=null&&v!==''?'Entered':'Estimate']); }
+  for (const c of I.classes) lines.push(['Payroll', c.desc, c.code, classAmount(c), isEst(c)?'Estimate':'Entered']);
+  const ct = contractorTotals(); lines.push(['Contractors','1099 contractors with current certificate','',Math.round(ct.insured),'Estimate'],['Contractors','1099 contractors without certificate','',Math.round(ct.uninsured),'Estimate'],['Drivers','Trainers driving own vehicles','',S.trainers.filter(t=>t.status!=='On leave').length,'App']);
+  return lines.map(csvLine).join('\n');
+}
+function insSummary(){
+  const I = ensureIns(); const ct = contractorTotals(); const months = auditMonths();
+  const rec = months.reduce((a,m)=>a+(I.receipts[m]!=null&&I.receipts[m]!==''?+I.receipts[m]:monthEstimate(m)),0);
+  const est = months.filter(m=>I.receipts[m]==null||I.receipts[m]==='').length;
+  return [`${S.biz} · premium audit summary`, `Audit period: ${fmtD(I.period.start,{month:'long',day:'numeric',year:'numeric'})} to ${fmtD(I.period.end,{month:'long',day:'numeric',year:'numeric'})}`, '',
+    `Gross receipts: ${money(rec)}${est?` (${est} month${est===1?'':'s'} estimated)`:''}`, '', 'Payroll by class:',
+    ...I.classes.map(c=>`  ${c.code||'(no code)'}  ${c.desc}: ${money(classAmount(c))}${isEst(c)?' (estimate)':''}`), '',
+    `1099 contractors with current certificates: ${money(ct.insured)}`, `1099 contractors without certificates: ${money(ct.uninsured)}${ct.uninsuredList.length?' ('+ct.uninsuredList.map(fullName).join(', ')+')':''}`,
+    `Trainers driving own vehicles: ${S.trainers.filter(t=>t.status!=='On leave').length}`, '', 'Policies:',
+    ...I.policies.map(p=>`  ${insPolicyDef(p.id).type}: ${p.carrier||'carrier not entered'}${p.policyNo?' #'+p.policyNo:''}${p.start&&p.end?', '+p.start+' to '+p.end:''}`)].join('\n');
+}
+
 /* ================= Business: Resources ================= */
 const RESOURCES = {
   forms:{l:'Forms & waivers', items:[
@@ -1591,6 +1764,8 @@ function aiAnswer(qRaw){
   }
   if (/risk|lapsed|haven.?t (seen|trained)|losing/.test(q)){ const r = S.clients.filter(c=>clientState(c)==='At risk'); return r.length?`${r.length} clients have gone 10+ days without a session and nothing is booked:`+ul(r.map(c=>`<b>${esc(fullName(c))}</b> · last session ${ago(lastSession(c)).toLowerCase()} · ${esc(fullName(T(c.trainerId)))}`))+goBtn('#clients','Open client book'):'No clients are at risk right now.'; }
   if (/renew|ending|package|running out/.test(q)){ const r = S.clients.filter(c=>clientState(c)==='Renew soon'); return `${r.length} clients have 2 or fewer sessions left:`+ul(r.map(c=>`<b>${esc(fullName(c))}</b> · ${c.remaining} left on ${esc(PACKAGES[c.pkg].short)} · ${esc(fullName(T(c.trainerId)))}`))+goBtn('#clients','Open client book'); }
+  if (/insurance|audit|policy|policies|certificate|coi/.test(q) && can('insurance')){ const I = ensureIns(); const open = I.audits.filter(a=>a.status!=='Closed').sort((a,b)=>a.due.localeCompare(b.due)); const ct = contractorTotals();
+    return (open.length?'Open audits:'+ul(open.map(a=>`<b>${esc(insPolicyDef(a.policy).type)}</b> · due ${fmtD(a.due)} · ${a.status}`)):'No open audits.')+`Policies in force: ${I.policies.filter(p=>policyState(p).s==='ok').length} of ${I.policies.length}. Packet checklist: ${INS_DOCS.filter(([k])=>I.docs[k]).length} of ${INS_DOCS.length} ready.${ct.uninsuredList.length?` ${ct.uninsuredList.length} 1099 trainers have no current certificate.`:''}`+goBtn('#insurance','Open Business Insurance'); }
   if (/payroll|pay|wages/.test(q)){ const rows = S.trainers.filter(t=>t.status!=='On leave').map(t=>payFor(t,st)); const tot = k=>rows.reduce((a,p)=>a+p[k],0); return `Trainers have earned <b>${money(tot('toDate'))}</b> so far this week. Projected for the full week: <b>${money(tot('proj'))}</b>, against ${money(tot('rev'))} in booked revenue.`+goBtn('#payroll','Open Trainer Payroll'); }
   if (/revenue|sales|income|made/.test(q)){ const rev = S.sessions.filter(billable).reduce((a,s)=>a+sessionRevenue(s),0); return `Booked revenue this week is <b>${money(rev)}</b> from ${S.sessions.filter(billable).length} sessions.`+goBtn('#dashboard','Open dashboard'); }
   if (/lead/.test(q)){ return S.leads.length?`${S.leads.length} leads are waiting:`+ul(S.leads.map(l=>`<b>${esc(fullName(l))}</b> · ${esc(l.zone)} · ${esc(GOALS[l.goal].g)}`))+goBtn('#leads','Match leads'):'No leads waiting.'; }
@@ -1768,6 +1943,13 @@ document.addEventListener('click', e => {
     case 'chan': ui.chan = el.dataset.v; saveUi(); render(); break;
     case 'resTab': ui.resTab = el.dataset.v; saveUi(); render(); break;
     case 'repTab': ui.repTab = el.dataset.v; saveUi(); render(); break;
+    case 'insTab': ui.insTab = el.dataset.v; saveUi(); render(); break;
+    case 'insPolicy': insPolicyModal(id); break;
+    case 'insAddClass': { const I = ensureIns(); I.classes.push({id:'c'+Date.now(), code:'', desc:'New class', amount:null}); commit(); break; }
+    case 'insAddAudit': { const I = ensureIns(); I.audits.push({id:'A'+(I.nextAudit++), policy:'gl', kind:'Mail-in (voluntary)', due:ymd(addDays(today0(),30)), status:'Not started', auditor:'', result:'', notes:''}); openAuditModal(I.audits[I.audits.length-1].id); save(); break; }
+    case 'insDelAudit': { const I = ensureIns(); I.audits = I.audits.filter(a=>a.id!==id); commit('Audit removed'); break; }
+    case 'insCsv': copyText(insCsv()); break;
+    case 'insSummary': copyText(insSummary()); break;
     case 'look': S.look = el.dataset.v; commit(`${LOOKS[S.look].name} theme on`); break;
     case 'dropLogo': S.logo = ''; commit('Logo removed'); break;
     case 'font': S.font = el.dataset.v; commit(`${FONTS[S.font].name} typeface on`); break;
@@ -1820,6 +2002,14 @@ document.addEventListener('change', e => {
     const file = el.files[0]; if (file.size > 500*1024){ toast('That logo is over 500 KB. Try a smaller PNG or SVG.'); return; }
     const rd = new FileReader(); rd.onload = () => { S.logo = rd.result; commit('Logo saved'); }; rd.onerror = () => toast('Could not read that file. Try another image.'); rd.readAsDataURL(file); return;
   }
+  if (el.dataset.insRec){ const I = ensureIns(); I.receipts[el.dataset.insRec] = el.value===''?null:+el.value; commit(); return; }
+  if (el.dataset.insClass){ const I = ensureIns(); const c = I.classes.find(x=>x.id===el.dataset.insClass); c[el.dataset.k] = el.dataset.k==='amount' ? (el.value===''?null:+el.value) : el.value; commit(); return; }
+  if (el.dataset.insPeriod){ const I = ensureIns(); if (el.value) I.period[el.dataset.insPeriod] = el.value; if (I.period.start > I.period.end){ toast('The audit period must end after it starts'); } commit(); return; }
+  if (el.dataset.insWtype){ ensureIns().wtype[el.dataset.insWtype] = el.value; commit(); return; }
+  if (el.dataset.insW9){ ensureIns().w9[el.dataset.insW9] = el.checked; commit(); return; }
+  if (el.dataset.insCheck){ ensureIns().docs[el.dataset.insCheck] = el.checked; commit(); return; }
+  if (el.dataset.insDoc){ const p = ensureIns().policies.find(x=>x.id===el.dataset.insDoc); p.docs[el.dataset.k] = el.checked; commit(); return; }
+  if (el.dataset.insAudit){ const a = ensureIns().audits.find(x=>x.id===el.dataset.insAudit); a[el.dataset.k] = el.value; commit(el.dataset.k==='status'?'Audit marked '+el.value.toLowerCase():''); return; }
   if (el.dataset.access){ const a = S.access[el.dataset.access] ||= {}; a[el.dataset.k] = el.checked; commit('Access updated'); return; }
   const a = el.dataset.actChange;
   if (a==='setZone'){ const t = T(el.dataset.id); t.zone = el.value; t.zoneGuess = false; commit(`${fullName(t)} now covers ${t.zone}`); trainerDrawer(t.id); }
@@ -1846,6 +2036,10 @@ document.addEventListener('submit', e => {
   const f = e.target; e.preventDefault();
   if (f.id==='aiForm'){ const q = $('#aiQ').value.trim(); if (!q) return; aiLog.push({who:'me',q},{who:'bot',html:aiAnswer(q)}); aiOpen(); return; }
   if (f.id==='chatForm'){ const v = $('#chatText').value.trim(); if (!v) return; (S.chat[ui.chan] ||= []).push({by:asId, at:Date.now(), text:v}); commit(); setTimeout(()=>$('#chatText')?.focus(),0); return; }
+  if (f.id==='insPolicyForm'){ const fd = Object.fromEntries(new FormData(f)); const p = ensureIns().policies.find(x=>x.id===f.dataset.id);
+    for (const k of ['carrier','policyNo','start','end','limits','premium','req','notes']) p[k] = (fd[k]||'').trim();
+    p.ai = !!fd.ai; p.docs.dec = !!fd.dec; closeLayer(); commit('Policy saved'); return; }
+  if (f.id==='auditForm'){ const fd = Object.fromEntries(new FormData(f)); const a = ensureIns().audits.find(x=>x.id===f.dataset.id); Object.assign(a, {policy:fd.policy, kind:fd.kind, due:fd.due||a.due}); closeLayer(); commit('Audit saved'); return; }
   if (f.id==='bizForm'){ const fd = Object.fromEntries(new FormData(f)); S.biz = (fd.f_biz||'').trim() || S.biz; S.ownerName = (fd.f_owner||'').trim(); S.tagline = (fd.f_tagline||'').trim(); commit('Saved'); return; }
   if (f.id!=='addForm') return;
   const fd = Object.fromEntries(new FormData(f)); const kind = f.dataset.kind; const t0 = today0();
