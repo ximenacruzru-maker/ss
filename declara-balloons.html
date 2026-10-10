@@ -667,6 +667,14 @@ table.pay .who{min-width:0}
 .tablewrap.ts td{padding-top:6px;padding-bottom:6px}
 .tablewrap.ts tr.day td{border-top:2px solid var(--line)}
 @media (max-width:560px){.tablewrap.ts th:nth-child(4),.tablewrap.ts td:nth-child(4),.tablewrap.ts th:nth-child(5),.tablewrap.ts td:nth-child(5),.ts-note{display:none}.wknav b{font-size:17px}}
+
+.form-drop{display:flex;flex-direction:column;align-items:center;gap:4px;border:2px dashed var(--line);border-radius:12px;padding:20px;text-align:center;cursor:pointer;background:var(--panel-2)}
+.form-drop small{color:var(--muted);font-size:12.5px}
+.form-drop.over,.form-drop:hover{border-color:var(--lime)}
+.ftag{flex:none;min-width:44px;text-align:center;font-size:11px;font-weight:700;letter-spacing:.04em;border-radius:6px;padding:4px 6px;background:color-mix(in srgb,var(--lime) 15%,transparent);color:var(--lime)}
+.ftag.empty{background:color-mix(in srgb,var(--fg) 6%,transparent);color:var(--muted);font-weight:600}
+.fname{word-break:break-word}
+@media (max-width:560px){.list .end{flex-wrap:wrap;justify-content:flex-end}}
 </style>
 
 <div class="app">
@@ -1014,7 +1022,7 @@ function load(){
 }
 function save(){ lsSet(KEY, JSON.stringify(S)); }
 function regenerate(roster, seed){
-  const keep = {}; for (const k of ['biz','tagline','logo','ownerName','look','font','themeV','brandV','taglineV','ins','prices','mileage','inv']) if (S && k in S) keep[k] = S[k];
+  const keep = {}; for (const k of ['biz','tagline','logo','ownerName','look','font','themeV','brandV','taglineV','ins','prices','mileage','inv','forms']) if (S && k in S) keep[k] = S[k];
   S = Object.assign(generate(seed || 20261010, roster), keep, {rosterV:1});
 }
 function nextBirthday(t){
@@ -2097,12 +2105,12 @@ const RESOURCES = {
     ['Step ladder, scissors and hooks','Ladder rated for the ceiling height at the venue',''],
     ['Cleanup bags','Pick up every fragment after setup and teardown','']]},
   platforms:{l:'Platforms', items:[
-    ['Payments & deposits','Where deposits and balances are collected','Office admins'],
-    ['Payroll provider','Weekly artist payroll runs every Monday','Owner & Operations Manager'],
-    ['Helium supplier account','Cylinder orders, swaps and deliveries','Production Lead'],
-    ['Balloon wholesaler','Stock orders by color and size','Production Lead'],
-    ['Insurance carrier portal','Certificates of insurance for venues','Operations Manager'],
-    ['Website inquiry form','New inquiries land in Leads','Everyone']]}
+    ['Payments & deposits','Where deposits and balances are collected',''],
+    ['Payroll provider','Weekly artist payroll from Hours & Payroll','Weekly'],
+    ['Helium supplier account','Cylinder orders, swaps and deliveries',''],
+    ['Balloon wholesaler','Stock orders by color and size',''],
+    ['Insurance carrier portal','Certificates of insurance for venues',''],
+    ['Website inquiry form','Add each new inquiry in Inquiries','']]}
 };
 function vResources(){
   const tab = RESOURCES[ui.resTab] ? ui.resTab : 'forms';
@@ -2116,8 +2124,9 @@ function vResources(){
     <li><b>Weight every outdoor arch and column</b> for the wind forecast, and take them down if gusts pick up.</li>
     <li><b>Keep foil balloons away from power lines</b> and always tie them down. Loose foil balloons can cause power outages.</li></ol>
     <p class="note">File an incident report in Resources within 24 hours of any injury, damage or venue complaint.</p></section>`;
+  else if (tab==='forms') body = formsTab();
   else body = `<div class="list" style="background:var(--panel)">${RESOURCES[tab].items.map(([a,b,c])=>`<div><span style="min-width:0"><b>${esc(a)}</b><br><small>${esc(b)}</small></span>${c?`<span class="end"><small>${esc(c)}</small></span>`:''}</div>`).join('')}</div>`;
-  return head('Business','Resources','Contracts and forms, the safety plan, the standard install kit and the platforms the business signs into.') + tabs + body;
+  return head('Business','Resources','Your forms and contracts, the safety plan, the standard install kit and the platforms the business signs into.') + tabs + body;
 }
 
 /* ================= Team: Training ================= */
@@ -2161,6 +2170,61 @@ function compRows(){
     <tbody>${list.map(t=>`<tr data-act="trainer" data-id="${t.id}"><td><div class="who">${av(t)}<div><b>${esc(fullName(t))}</b><small>${esc(t.cert)} · ${esc(t.zone)}</small></div></div></td>${compItems(t).map(x=>cell(t,x)).join('')}</tr>`).join('') || '<tr><td colspan="5" class="empty">Every artist is current. Nothing to renew.</td></tr>'}</tbody></table></div>`;
 }
 
+/* ================= Your forms: uploaded files kept in this browser (IndexedDB), listed in S.forms ================= */
+const FORM_TYPES = /\.(pdf|docx?|xlsx?|pptx?|csv|txt|rtf|png|jpe?g|webp|heic)$/i;
+const FORM_ACCEPT = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt,.rtf,.png,.jpg,.jpeg,.webp,.heic';
+const FORM_MAX = 15*1024*1024;
+let idbP = null;
+function idb(){
+  if (!idbP) idbP = new Promise((res, rej) => { try { const r = indexedDB.open('declara-balloons-files', 1); r.onupgradeneeded = () => r.result.createObjectStore('files'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch(e){ rej(e); } });
+  return idbP;
+}
+async function idbDo(mode, fn){ const db = await idb(); return new Promise((res, rej) => { const tx = db.transaction('files', mode); const r = fn(tx.objectStore('files')); tx.oncomplete = () => res(r && r.result); tx.onerror = tx.onabort = () => rej(tx.error); }); }
+const fileSize = n => n<1024 ? n+' B' : n<1048576 ? Math.round(n/1024)+' KB' : (n/1048576).toFixed(1)+' MB';
+const fileExt = n => ((n.match(/\.([a-z0-9]+)$/i)||[])[1]||'file').toUpperCase();
+const isImg = n => /\.(png|jpe?g|webp)$/i.test(n);
+async function addForms(list, slot){
+  const files = [...list]; const ok = files.filter(f=>FORM_TYPES.test(f.name) && f.size<=FORM_MAX && f.size>0);
+  const skipped = files.length - ok.length;
+  if (!ok.length){ toast('Use a PDF, Word, Excel or image file under 15 MB.'); return; }
+  S.forms ||= []; let saved = 0;
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch(e){}
+  for (const f of (slot ? ok.slice(0,1) : ok)){
+    const id = 'F'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+    try { await idbDo('readwrite', st => st.put(f, id)); }
+    catch(e){ toast('This browser would not store the file. Storage may be full or switched off (private window).'); break; }
+    if (slot){ const old = S.forms.find(x=>x.slot===slot); if (old){ S.forms = S.forms.filter(x=>x!==old); idbDo('readwrite', st=>st.delete(old.id)).catch(()=>{}); } }
+    S.forms.push({id, name:f.name, size:f.size, added:ymd(today0()), slot:slot||''}); saved++;
+  }
+  if (saved) commit((saved===1 ? `${ok[0].name} saved` : `${saved} forms saved`) + (skipped ? `. ${skipped} skipped: PDF, Word, Excel or images under 15 MB only.` : ''));
+}
+async function formBlob(id){ try { return await idbDo('readonly', st => st.get(id)); } catch(e){ return null; } }
+async function saveForm(id){
+  const m = (S.forms||[]).find(x=>x.id===id); if (!m) return; const blob = await formBlob(id);
+  if (!blob){ toast('That file is no longer in this browser. Upload it again.'); return; }
+  const dl = window.claude && window.claude.use ? await window.claude.use('downloads').catch(()=>null) : null;
+  if (dl){ try { await dl.save({filename:m.name, data:blob}); } catch(err){ if (err && err.code==='rejected_extension') toast('This file type can’t be saved from here. PDF, DOCX and XLSX can.'); else if (err && err.code!=='declined') toast('Could not save the file here.'); } return; }
+  const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = m.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 5000);
+}
+async function viewForm(id){
+  const m = (S.forms||[]).find(x=>x.id===id); const blob = m && await formBlob(id); if (!blob){ toast('That file is no longer in this browser. Upload it again.'); return; }
+  const rd = new FileReader(); rd.onload = () => openModal(`<div class="d-h"><div><h2>${esc(m.name)}</h2><p>${fileSize(m.size)} · added ${fmtD(m.added,{month:'short',day:'numeric',year:'numeric'})}</p></div><button class="x" data-act="close" aria-label="Close">${I.x}</button></div><img src="${rd.result}" alt="${esc(m.name)}" style="width:100%;border-radius:10px;border:1px solid var(--line)"><div class="actions"><button class="btn primary" data-act="formSave" data-id="${m.id}">Save a copy</button></div>`); rd.readAsDataURL(blob);
+}
+function formLine(f, opts={}){
+  return `<div><span class="ftag">${esc(fileExt(f.name))}</span><span style="min-width:0;flex:1"><b class="fname">${esc(f.name)}</b><br><small>${fileSize(f.size)} · added ${fmtD(f.added,{month:'short',day:'numeric',year:'numeric'})}${opts.sub?' · '+opts.sub:''}</small></span>
+    <span class="end">${isImg(f.name)?`<button class="btn sm" data-act="formView" data-id="${f.id}">View</button>`:''}<button class="btn sm" data-act="formSave" data-id="${f.id}">Save copy</button>${opts.replace||''}<button class="btn sm ghost danger" data-act="formDel" data-id="${f.id}" aria-label="Remove ${esc(f.name)}" title="Remove">${I.x}</button></span></div>`;
+}
+function formsTab(){
+  const forms = S.forms || []; const yours = forms.filter(f=>!f.slot).sort((a,b)=>b.added.localeCompare(a.added)||a.name.localeCompare(b.name));
+  const std = RESOURCES.forms.items.map(([a,b,c],i) => { const f = forms.find(x=>x.slot===a); const inp = `<input type="file" id="fs_${i}" data-slot="${esc(a)}" accept="${FORM_ACCEPT}" hidden>`;
+    return f ? formLine(f, {sub:`<b>${esc(a)}</b>`, replace:`<label class="btn sm" for="fs_${i}">Replace</label>${inp}`})
+      : `<div><span class="ftag empty">Empty</span><span style="min-width:0;flex:1"><b>${esc(a)}</b><br><small>${esc(b)}</small></span><span class="end"><label class="btn sm primary" for="fs_${i}">Upload yours</label>${inp}</span></div>`; }).join('');
+  return `<section class="panel"><div class="panel-h"><h2>Your forms</h2><span class="meta">Contracts, waivers, W-9s, venue paperwork, price sheets: anything you hand out or file.</span><div class="right"><label class="btn primary" for="formFiles">+ Upload forms</label><input id="formFiles" type="file" multiple accept="${FORM_ACCEPT}" hidden></div></div>
+      <label class="form-drop" id="formDrop" for="formFiles"><b>Drop files here</b><small>PDF, Word, Excel or images, up to 15 MB each</small></label>
+      ${yours.length?`<div class="list" style="margin-top:12px">${yours.map(f=>formLine(f)).join('')}</div>`:''}
+      <p class="note" style="margin-top:10px">Files are kept in this browser on this device, not sent anywhere. Keep your originals too: clearing browser data removes them.</p></section>
+    <section class="panel"><div class="panel-h"><h2>Standard forms</h2><span class="meta">Upload your own version of each one so it’s always to hand.</span></div><div class="list">${std}</div></section>`;
+}
 let aiLog = [];
 function aiOpen(){
   if (!aiLog.length) aiLog.push({who:'bot', html:`Hi ${esc(me().first)}. I answer from ${esc(S.biz)}'s own data: artists, clients, the schedule, pay and documents. Nothing leaves this page.`});
@@ -2182,9 +2246,9 @@ function setLogoFile(file){
   if (file.size > 500*1024){ toast('That logo is over 500 KB. Try a smaller PNG or SVG.'); return; }
   const rd = new FileReader(); rd.onload = () => { S.logo = rd.result; commit('Logo saved'); }; rd.onerror = () => toast('Could not read that file. Try another image.'); rd.readAsDataURL(file);
 }
-document.addEventListener('dragover', e => { const z = e.target.closest && e.target.closest('#logoDrop'); if (z){ e.preventDefault(); z.classList.add('over'); } });
-document.addEventListener('dragleave', e => { const z = e.target.closest && e.target.closest('#logoDrop'); if (z) z.classList.remove('over'); });
-document.addEventListener('drop', e => { const z = e.target.closest && e.target.closest('#logoDrop'); if (!z) return; e.preventDefault(); const f = e.dataTransfer.files && e.dataTransfer.files[0]; if (f) setLogoFile(f); });
+document.addEventListener('dragover', e => { const z = e.target.closest && e.target.closest('#logoDrop, #formDrop'); if (z){ e.preventDefault(); z.classList.add('over'); } });
+document.addEventListener('dragleave', e => { const z = e.target.closest && e.target.closest('#logoDrop, #formDrop'); if (z) z.classList.remove('over'); });
+document.addEventListener('drop', e => { const z = e.target.closest && e.target.closest('#logoDrop, #formDrop'); if (!z) return; e.preventDefault(); z.classList.remove('over'); const fl = e.dataTransfer.files; if (!fl || !fl.length) return; if (z.id==='formDrop') addForms(fl, ''); else setLogoFile(fl[0]); });
 function celebrate(){
   try { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; } catch(e){}
   const el = document.createElement('img'); el.src = CONFETTI; el.alt = ''; el.className = 'burst'; document.body.appendChild(el); setTimeout(()=>el.remove(), 1300);
@@ -2297,7 +2361,7 @@ document.addEventListener('click', e => {
     case 'addClient': formModal('client'); break;
     case 'addLead': formModal('lead'); break;
     case 'addWork': formModal('work'); break;
-    case 'reset': openModal(`<h2>Reset sample data?</h2><p class="note" style="font-size:15px">This replaces every artist, client, event, hour and ticket saved in this browser with fresh sample data. Your logo, theme, prices and insurance stay.</p><div class="actions"><button class="btn ghost" data-act="close">Keep my data</button><button class="btn primary" data-act="doReset">Reset</button></div>`); break;
+    case 'reset': openModal(`<h2>Reset sample data?</h2><p class="note" style="font-size:15px">This replaces every artist, client, event, hour and ticket saved in this browser with fresh sample data. Your logo, theme, prices, uploaded forms and insurance stay.</p><div class="actions"><button class="btn ghost" data-act="close">Keep my data</button><button class="btn primary" data-act="doReset">Reset</button></div>`); break;
     case 'doReset': regenerate(S.rosterSrc, 20261001 + Math.floor(Math.random()*1000)); save(); fresh(); toast(S.rosterSrc?'Sample activity rebuilt around your artists':'Sample data reset'); break;
     case 'importRoster': confirmRoster(parseRoster($('#rosterText').value)); break;
     case 'doImportRoster': if (pendingRoster){ regenerate(pendingRoster); pendingRoster=null; save(); fresh(); location.hash='#trainers'; toast(`${S.trainers.length} artists loaded`); } break;
@@ -2345,6 +2409,10 @@ document.addEventListener('click', e => {
     case 'reorder': { const sh = shortages(14); const low = SIZES.filter(([k])=>{ const n = materialNeeds(14,false).need[k]; return (S.inv.stock[k]||0) - n < n*.25 && n>0; });
       const items = sh.length ? sh.map(x=>`${x.label} ×${x.short.toLocaleString()}`) : low.map(([,l])=>l); if (!items.length){ toast('Nothing to reorder for the next 14 days'); break; }
       S.work.push({id:'W'+(S.nextId.w++), name:'Reorder: '+items.join(', '), area:'Equipment', priority:sh.length?'High':'Normal', due:ymd(addDays(today0(),2)), assignee:'U0', done:false, created:ymd(today0())}); commit('Reorder ticket added'); break; }
+    case 'formSave': saveForm(id); break;
+    case 'formView': viewForm(id); break;
+    case 'formDel': { const f = (S.forms||[]).find(x=>x.id===id); if (!f) break; openModal(`<h2>Remove ${esc(f.name)}?</h2><p class="note" style="font-size:15px">It is deleted from this browser. Your original file is not affected.</p><div class="actions"><button class="btn ghost" data-act="close">Keep it</button><button class="btn primary danger" data-act="formDelDo" data-id="${f.id}">Remove</button></div>`); break; }
+    case 'formDelDo': { const f = (S.forms||[]).find(x=>x.id===id); S.forms = (S.forms||[]).filter(x=>x.id!==id); idbDo('readwrite', st=>st.delete(id)).catch(()=>{}); closeLayer(); commit(f?`${f.name} removed`:''); break; }
     case 'resetPrices': S.prices = {}; commit('Price list restored'); break;
   }
 });
@@ -2356,6 +2424,7 @@ document.addEventListener('change', e => {
   if (el.dataset.mod){ const t = T(el.dataset.t); t.training[el.dataset.mod] = el.checked; save(); render(); if ($('#layer .modal')) trainingModal(t.id); return; }
   if ((el.id==='rosterFile' || el.id==='rosterFileTop') && el.files[0]){ handleRosterFile(el.files[0]); el.value=''; return; }
   if (el.id==='f_logo' && el.files[0]){ setLogoFile(el.files[0]); el.value=''; return; }
+  if ((el.id==='formFiles' || el.dataset.slot) && el.files.length){ addForms(el.files, el.dataset.slot||''); el.value=''; return; }
   /* quote builder */
   if (qb && (el.dataset.q || el.dataset.qn || el.dataset.qv || el.dataset.qi || el.dataset.qc)){
     if (el.dataset.q){ const k = el.dataset.q; if (k==='loadIn'){ const m = timeToMin(el.value); if (m!=null) qb.loadIn = m; } else if (k==='type' || k==='depositPct') qb[k] = +el.value; else qb[k] = el.value;
