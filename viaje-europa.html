@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body>
+<title>Europa 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: a travel notebook. The route runs across the top as a ruled line of stops; under it, one column of days and tickets, money always shown in dollars and pesos. */
+:root{
+  --paper:#f2f4f1; --card:#fbfcfa; --ink:#18242c; --muted:#5b6a70; --line:#d5dcd7;
+  --pass:#1d5c4b; --pass-soft:#dcebe4; --stamp:#b8432f; --stamp-soft:#f6e1da; --gold:#a8792a;
+  --madrid:#b8432f; --paris:#3a5a8c; --roma:#a8792a; --florencia:#4f7a3a; --milan:#6b4f8a; --gdl:#1d5c4b;
+  --f-display:'Young Serif',Georgia,'Times New Roman',serif;
+  --f-body:'Instrument Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#11181c; --card:#172126; --ink:#e7ece9; --muted:#9aa9ad; --line:#2a383e;
+  --pass:#6fc0a3; --pass-soft:#1d3a32; --stamp:#e58a72; --stamp-soft:#3d241e; --gold:#d6a957;
+  --madrid:#e58a72; --paris:#8fb0e6; --roma:#d6a957; --florencia:#9cc77f; --milan:#b9a0dc; --gdl:#6fc0a3; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --paper:#11181c; --card:#172126; --ink:#e7ece9; --muted:#9aa9ad; --line:#2a383e;
+  --pass:#6fc0a3; --pass-soft:#1d3a32; --stamp:#e58a72; --stamp-soft:#3d241e; --gold:#d6a957;
+  --madrid:#e58a72; --paris:#8fb0e6; --roma:#d6a957; --florencia:#9cc77f; --milan:#b9a0dc; --gdl:#6fc0a3; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--f-body);margin:0}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:20px;padding-block:28px 60px}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance;letter-spacing:-.01em}
+a{color:var(--pass)}
+.mono,.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+
+/* header */
+.top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:end}
+.top h1{font-size:clamp(34px,5vw,54px);line-height:1.02}
+.top p{margin:8px 0 0;max-width:62ch;color:var(--muted)}
+.fx{display:grid;grid-template-columns:repeat(3,auto);gap:10px;align-items:end}
+.capbar{margin-top:14px;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:14px}
+.cap{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;min-width:0}
+.cap .hd{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.cap .hd label{margin-left:auto;font-size:12px;color:var(--muted);font-weight:600;display:flex;gap:6px;align-items:center}
+.cap .hd input{width:90px;font:600 14px var(--f-mono);color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:4px 6px;text-align:right}
+.cap .bar{height:10px;border-radius:5px}
+.cap .bar i{background:var(--pass)}
+.cap.over .bar i{background:var(--stamp)}
+.cap .st{font-size:13.5px;margin-top:8px}
+.cap.over .st b{color:var(--stamp)}
+@media (max-width:760px){.capbar{grid-template-columns:1fr}}
+.fx label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:600}
+.fx input{width:96px;font:600 15px var(--f-mono);color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
+.fx small{grid-column:1/-1;font-size:11.5px;color:var(--muted);max-width:340px}
+
+/* route */
+.route{margin-top:28px;position:relative;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.route::before{content:"";position:absolute;left:8%;right:8%;top:17px;border-top:2px dashed var(--line)}
+.stop{position:relative;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.stop i{width:36px;height:36px;border-radius:50%;background:var(--card);border:2px solid var(--c);display:grid;place-items:center;font:600 11px var(--f-mono);color:var(--c);position:relative}
+.stop b{font-family:var(--f-display);font-weight:400;font-size:18px}
+.stop span{font-size:12.5px;color:var(--muted)}
+
+/* totals */
+.totals{margin-top:26px;display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:0;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.totals > div{padding:16px 20px;min-width:0;border-left:1px solid var(--line)}
+.totals > div:first-child{border-left:0;background:var(--pass);color:var(--paper)}
+.totals > div:first-child .eyebrow{color:color-mix(in srgb,var(--paper) 75%,transparent)}
+.big{font:600 30px/1.15 var(--f-mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em;margin-top:4px}
+.big small{font-size:16px;font-weight:500;opacity:.8}
+.sub{font-size:13px;margin-top:2px}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:10px}
+.bar i{display:block;height:100%;background:var(--stamp)}
+
+/* tabs */
+.tabs{margin-top:28px;display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px;font:600 14.5px var(--f-body);color:var(--muted);cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--stamp)}
+.tabs button:focus-visible,.btn:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--pass);outline-offset:2px}
+.panel{margin-top:22px}
+
+/* days */
+.day{display:grid;grid-template-columns:150px minmax(0,1fr);gap:20px;padding:20px 0;border-top:1px solid var(--line)}
+.day:first-child{border-top:0}
+.dhead{position:sticky;top:env(safe-area-inset-top,0px);align-self:start}
+.dhead .d{font-family:var(--f-display);font-size:30px;line-height:1}
+.dhead .w{font-size:13px;color:var(--muted);text-transform:capitalize}
+.chip{display:inline-block;font-size:12px;font-weight:600;border-radius:999px;padding:2px 10px;border:1px solid var(--c);color:var(--c);margin-top:8px}
+.dbody h3{font-size:22px}
+.steps{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.steps li{display:grid;grid-template-columns:58px minmax(0,1fr);gap:10px}
+.steps .h{font:600 13px var(--f-mono);color:var(--muted);padding-top:1px}
+.steps .tip{font-size:13px;color:var(--muted)}
+.daycost{margin-top:12px;font-size:13px;color:var(--muted)}
+.daycost b{color:var(--ink);font-family:var(--f-mono);font-weight:600}
+
+/* tickets */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:14px}
+.tk{background:var(--card);border:1px solid var(--line);border-radius:12px;display:grid;grid-template-rows:auto 1fr auto;min-width:0;position:relative}
+.tk.done{border-color:var(--pass)}
+.tk .th{padding:14px 16px 10px;border-bottom:1px dashed var(--line);display:flex;gap:10px;align-items:flex-start}
+.tk .th .k{font:600 11px var(--f-mono);letter-spacing:.06em;color:var(--c);text-transform:uppercase}
+.tk .th h3{font-size:19px;line-height:1.2;margin-top:2px}
+.tk .th .dt{margin-left:auto;text-align:right;font:600 12px var(--f-mono);color:var(--muted);white-space:nowrap}
+.tk .tb{padding:10px 16px;font-size:13.5px;display:flex;flex-direction:column;gap:6px}
+.tk .tb p{margin:0}
+.price{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;align-items:baseline;margin-top:4px}
+.price label{font-size:12px;color:var(--muted)}
+.price .in{display:flex;align-items:center;gap:6px;font:600 14px var(--f-mono)}
+.price input{width:86px;font:600 14px var(--f-mono);color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:4px 6px;text-align:right}
+.money{font:600 15px var(--f-mono)}
+.money small{font-weight:500;color:var(--muted);font-size:12.5px}
+.tk .tf{padding:10px 16px 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-top:1px solid var(--line)}
+.btn{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font:600 13px var(--f-body);text-decoration:none;color:var(--pass);background:var(--pass-soft);border:0;border-radius:999px;padding:6px 12px;cursor:pointer}
+.btn.alt{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.chk{display:inline-flex;gap:6px;align-items:center;font-size:13px;font-weight:600;margin-left:auto;cursor:pointer;user-select:none}
+.chk input{width:17px;height:17px;accent-color:var(--pass)}
+.stampd{position:absolute;right:14px;top:44px;transform:rotate(-8deg);font:600 12px var(--f-mono);letter-spacing:.12em;color:var(--pass);border:2px solid var(--pass);border-radius:6px;padding:2px 8px;opacity:.85;pointer-events:none}
+.paga{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;color:var(--muted);font-weight:600}
+.osel{font:600 13px var(--f-body);color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:3px 6px}
+.who{display:inline-block;font-size:11.5px;font-weight:700;color:var(--pass);background:var(--pass-soft);border-radius:999px;padding:1px 8px;margin-left:4px}
+.list2{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:start;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.li input{width:17px;height:17px;margin-top:3px;accent-color:var(--pass)}
+.li.ok b{text-decoration:line-through;text-decoration-color:var(--pass)}
+.li .amt{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-family:var(--f-mono);font-size:13.5px}
+.li .amt small{color:var(--muted);font-size:12px}
+.warn{background:var(--stamp-soft);color:var(--ink);border-radius:8px;padding:8px 10px;font-size:13px}
+.sec-h{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:26px 0 12px}
+.sec-h:first-child{margin-top:0}
+.sec-h h2{font-size:26px}
+
+/* budget */
+.bud{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.box h3{font-size:20px;margin-bottom:10px}
+.row{display:grid;grid-template-columns:130px minmax(0,1fr) auto;gap:12px;align-items:center;padding:7px 0}
+.row .t{font-size:14px}
+.row .tr{height:10px;background:color-mix(in srgb,var(--ink) 7%,transparent);border-radius:5px;overflow:hidden}
+.row .tr i{display:block;height:100%;background:var(--c,var(--pass));border-radius:5px}
+.row .v{text-align:right;font:600 13.5px var(--f-mono);white-space:nowrap}
+.row .v small{display:block;font-weight:500;color:var(--muted);font-size:12px}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{padding:9px 12px;text-align:left;border-top:1px solid var(--line);vertical-align:top}
+th{border-top:0;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;background:color-mix(in srgb,var(--ink) 3%,transparent)}
+td.r,th.r{text-align:right}
+td.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.tot td{font-weight:700;background:color-mix(in srgb,var(--ink) 4%,transparent)}
+.notes{margin-top:26px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px}
+.notes .box p{margin:6px 0 0;font-size:14px}
+.foot{margin-top:30px;font-size:12.5px;color:var(--muted);max-width:80ch}
+
+@media (max-width:760px){
+  .top{grid-template-columns:1fr}
+  .totals{grid-template-columns:1fr}
+  .totals > div{border-left:0;border-top:1px solid var(--line)}
+  .totals > div:first-child{border-top:0}
+  .day{grid-template-columns:1fr;gap:8px}
+  .dhead{position:static;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+  .dhead .chip{margin-top:0}
+  .bud{grid-template-columns:1fr}
+  .row{grid-template-columns:96px minmax(0,1fr) auto}
+  .stop b{font-size:15px}.stop span{font-size:11px}
+  .fx{grid-template-columns:repeat(3,minmax(0,1fr))}.fx input{width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Itinerario para 2 · 29 oct – 8 nov 2026</div>
+      <h1>Madrid, París, Roma, Florencia y Milán</h1>
+      <p>Llegan a Madrid a las 5:00 am y siguen a París el mismo día. Cuatro días en París con Disneyland en Halloween, tres en Roma en un hotel frente al Panteón, dos en Florencia, una noche en Milán y de regreso a Guadalajara en vuelo directo desde Madrid. Todo está calculado para Eric y Xime, en pesos y en dólares, con un presupuesto de US$4,500 para todo menos los vuelos, comida incluida.</p>
+    </div>
+    <div class="fx" aria-label="Tipo de cambio">
+      <label for="fxEur">1 € en US$<input id="fxEur" type="number" step="0.001" min="0.5"></label>
+      <label for="fxMxn">1 US$ en MX$<input id="fxMxn" type="number" step="0.01" min="5"></label>
+      <label for="fxPax">Viajeros<input id="fxPax" type="number" step="1" min="1" max="10"></label>
+      <small>Tipo de cambio al 13 oct 2026: Banxico 18.38 MXN por dólar, euro 1.119 USD. Cámbialos y todo se recalcula.</small>
+    </div>
+  </header>
+
+  <nav class="route" aria-label="Ruta">
+    <div class="stop" style="--c:var(--madrid)"><i>MAD</i><b>Madrid</b><span>29 oct · 5:00 am</span></div>
+    <div class="stop" style="--c:var(--paris)"><i>PAR</i><b>París</b><span>29 oct – 2 nov</span></div>
+    <div class="stop" style="--c:var(--roma)"><i>ROM</i><b>Roma</b><span>2 – 5 nov</span></div>
+    <div class="stop" style="--c:var(--florencia)"><i>FLR</i><b>Florencia</b><span>5 – 7 nov</span></div>
+    <div class="stop" style="--c:var(--milan)"><i>MIL</i><b>Milán</b><span>7 – 8 nov</span></div>
+    <div class="stop" style="--c:var(--gdl)"><i>GDL</i><b>Guadalajara</b><span>8 nov</span></div>
+  </nav>
+
+  <section class="totals" id="totals" aria-live="polite"></section>
+  <section class="capbar" id="caps" aria-live="polite"></section>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="t-dias" data-tab="dias" aria-selected="true">Día por día</button>
+    <button role="tab" id="t-reservar" data-tab="reservar" aria-selected="false">Reservar ya</button>
+    <button role="tab" id="t-cuentas" data-tab="cuentas" aria-selected="false">Cuentas</button>
+    <button role="tab" id="t-transporte" data-tab="transporte" aria-selected="false">Vuelos y trenes</button>
+    <button role="tab" id="t-hoteles" data-tab="hoteles" aria-selected="false">Hoteles</button>
+    <button role="tab" id="t-entradas" data-tab="entradas" aria-selected="false">Entradas</button>
+    <button role="tab" id="t-presupuesto" data-tab="presupuesto" aria-selected="false">Presupuesto</button>
+  </div>
+  <main class="panel" id="panel"></main>
+
+  <p class="foot">Precios estimados el 14 de octubre de 2026 con tarifas oficiales y buscadores. Vuelos y hoteles cambian todos los días: abre cada enlace, revisa el precio real y escríbelo en la tarjeta. Tus cambios y las casillas de «Reservado» se guardan en este navegador.</p>
+</div>
+
+<script>
+(() => {
+'use strict';
+const CITY = {madrid:{n:'Madrid',c:'var(--madrid)'}, paris:{n:'París',c:'var(--paris)'}, roma:{n:'Roma',c:'var(--roma)'}, florencia:{n:'Florencia',c:'var(--florencia)'}, milan:{n:'Milán',c:'var(--milan)'}, gdl:{n:'Regreso',c:'var(--gdl)'}};
+const CAT = {vuelo:'Vuelos', tren:'Trenes y traslados', hotel:'Hoteles', entrada:'Entradas'};
+const gf = (from, to, date) => `https://www.google.com/travel/flights?q=${encodeURIComponent(`Flights from ${from} to ${to} on ${date} one way ${pax()} adults`)}&hl=es-419&curr=USD`;
+const bk = (name, ci, co) => `https://www.booking.com/searchresults.es.html?ss=${encodeURIComponent(name)}&checkin=${ci}&checkout=${co}&group_adults=${pax()}&no_rooms=1&group_children=0&selected_currency=USD`;
+const gh = name => `https://www.google.com/travel/search?q=${encodeURIComponent(name)}&hl=es-419&curr=USD`;
+
+/* unit: pp = per person, noche = per room per night (+ tax per person per night), ppdia = per person per day */
+const ITEMS = [
+  {id:'g0', cat:'vuelo', city:'madrid', date:'2026-10-29', k:'Vuelo · ya pagado', t:'Guadalajara → Madrid', sub:'Ya lo compró Eric. Llegan a Madrid a las 5:00 am del jueves 29.', cur:'USD', price:600, unit:'pp',
+    note:'Este precio es un estimado: escriban lo que pagó Eric por persona para que las cuentas entre los dos salgan exactas.', links:()=>[]},
+  {id:'v1', res:'Ya. Jueves 29 de octubre, IB 573 de las 11:30.', cat:'vuelo', city:'madrid', date:'2026-10-29', k:'Vuelo', t:'Madrid → París-Orly · Iberia IB 573', sub:'Sale 11:30 de la Terminal 4 y llega a Orly 13:35 (2 h 05 min), sin escalas.', cur:'EUR', price:120, unit:'pp',
+    note:'Horario publicado por Iberia para esta temporada: confirmen al comprar. Precio con una maleta documentada. Es un boleto aparte de su vuelo a Madrid; salir a las 11:30 les deja 6 horas y media para migración, registro biométrico de la UE y maletas. Si llegan a otra terminal, hay autobús gratis a la T4. Hay un Transavia más temprano (TO 4631, 8:55) pero es demasiado justo.',
+    links:()=>[['Buscar vuelos MAD → ORY', gf('MAD','ORY','2026-10-29')], ['Iberia', 'https://www.iberia.com/mx/']]},
+  {id:'t1', cat:'tren', city:'paris', date:'2026-10-29', k:'Metro', t:'Orly → Gare de Lyon', sub:'Metro línea 14, directo, unos 25 minutos.', cur:'EUR', price:16, unit:'pp',
+    note:'Boleto aeropuerto de €14 más la tarjeta Navigo Easy de €2.', links:()=>[['Boleto Paris Région Aeropuertos (RATP)', 'https://www.bonjour-ratp.fr/en/titres-tarifs/ticket-paris-region-aeroports/']]},
+  {id:'t2', cat:'tren', city:'paris', date:'2026-10-31', k:'Metro y RER', t:'Transporte en París', sub:'Unos 12 viajes por persona: RER A a Disneyland, RER C a Versalles y metro.', cur:'EUR', price:30, unit:'pp',
+    note:'Desde 2025 cada viaje en metro, tren o RER cuesta €2.50 en toda la región, incluidos Disneyland y Versalles. Se cargan en la Navigo Easy.', links:()=>[['Tarifas RATP', 'https://www.bonjour-ratp.fr/en/titres-tarifs/']]},
+  {id:'v2', res:'Ya. Lunes 2 de noviembre, TO 3914 de las 9:55, con maleta.', cat:'vuelo', city:'paris', date:'2026-11-02', k:'Vuelo', t:'París-Orly → Roma-Fiumicino · Transavia TO 3914', sub:'Sale 9:55 de Orly y llega a Fiumicino 12:00 (2 h 05 min), sin escalas. Del hotel: metro 14 directo a Orly.', cur:'EUR', price:120, unit:'pp',
+    note:'Horario publicado por Transavia: confirmen al comprar. Transavia cobra aparte la maleta documentada; este precio ya la incluye (unos €90 de boleto más €30 de maleta por persona).', links:()=>[['Buscar vuelos ORY → FCO', gf('ORY','FCO','2026-11-02')], ['Vueling', 'https://www.vueling.com/es'], ['Transavia', 'https://www.transavia.com/']]},
+  {id:'t3', cat:'tren', city:'roma', date:'2026-11-02', k:'Taxi', t:'Taxi de Fiumicino al hotel', sub:'Tarifa fija oficial del aeropuerto al centro histórico, por auto y no por persona. Unos 45 minutos.', cur:'EUR', price:70, unit:'grupo',
+    note:'Tomen solo los taxis blancos de la fila oficial. Para ir a la estación Termini el día 5, otro taxi de unos €15 (incluido aquí).', links:()=>[['Taxis en Fiumicino', 'https://www.adr.it/web/aeroporti-di-roma-en/pax-fco-taxi']]},
+  {id:'t4', cat:'tren', city:'roma', date:'2026-11-03', k:'Metro y bus', t:'Transporte en Roma', sub:'Unos 8 viajes de €1.50 por persona. Casi todo se camina.', cur:'EUR', price:12, unit:'pp', note:'Paguen con tarjeta sin contacto directamente en el torniquete.', links:()=>[['ATAC Roma', 'https://www.atac.roma.it/']]},
+  {id:'t5', res:'Recomendado. Jueves 5 de noviembre, 9:10, Roma Termini → Firenze S.M.N. Entre más tarde, más caro.', cat:'tren', city:'roma', date:'2026-11-05', k:'Tren', t:'Roma Termini → Firenze S.M.N.', sub:'Frecciarossa o Italo de las 9:10, 1 h 35 min.', cur:'EUR', price:29, unit:'pp',
+    note:'Comprando con 2 o 3 semanas sale entre €20 y €30; el mismo día puede costar €50.', links:()=>[['Trenitalia (Frecciarossa)', 'https://www.trenitalia.com/es.html'], ['Italo', 'https://www.italotreno.com/es']]},
+  {id:'t6', res:'Recomendado. Sábado 7 de noviembre hacia las 9:00, Firenze S.M.N. → Milano Centrale.', cat:'tren', city:'milan', date:'2026-11-07', k:'Tren', t:'Firenze S.M.N. → Milano Centrale', sub:'Frecciarossa o Italo de la mañana, 1 h 55 min, sin cambios.', cur:'EUR', price:35, unit:'pp',
+    note:'Comprando ya sale entre €25 y €45; el mismo día puede pasar de €60.', links:()=>[['Trenitalia (Frecciarossa)', 'https://www.trenitalia.com/es.html'], ['Italo', 'https://www.italotreno.com/es']]},
+  {id:'t7', cat:'tren', city:'milan', date:'2026-11-08', k:'Tren', t:'Hotel → aeropuerto de Milán', sub:'Malpensa Express desde Milano Centrale (unos 50 min), o metro M4 si su vuelo sale de Linate (€2.50).', cur:'EUR', price:13, unit:'pp', note:'', links:()=>[['Malpensa Express', 'https://www.malpensaexpress.it/es/']]},
+  {id:'v3', res:'Ya. Domingo 8 de noviembre: de preferencia en el mismo boleto que el Aeroméxico (búsquenlo en aeromexico.com saliendo de Milán).', cat:'vuelo', city:'gdl', date:'2026-11-08', k:'Vuelo', t:'Milán → Madrid', sub:'Vuelo temprano de Malpensa o Linate a Madrid, unas 2 h 20 min, sin escalas.', cur:'EUR', price:100, unit:'pp',
+    note:'Lo más seguro es comprarlo en el mismo boleto que el vuelo de Aeroméxico (con su socio Air Europa); así, si se retrasa, la aerolínea los reacomoda. Si lo compran aparte, que llegue a Madrid antes de las 11:00. Precio con maleta.', links:()=>[['Buscar vuelos MIL → MAD', gf('MIL','MAD','2026-11-08')], ['Aeroméxico (un solo boleto)', 'https://aeromexico.com/es-mx']]},
+  {id:'v4', res:'Ya. Domingo 8 de noviembre, AM 39 de las 14:35.', cat:'vuelo', city:'gdl', date:'2026-11-08', k:'Vuelo', t:'Madrid → Guadalajara · Aeroméxico AM 39', sub:'Directo, sin escalas: sale 14:35 de la Terminal 1 de Madrid y llega a Guadalajara 19:00 hora local.', cur:'USD', price:700, unit:'pp',
+    note:'Aeroméxico es la única aerolínea con vuelo directo Madrid–Guadalajara; opera los domingos. Confirmen el horario al comprar. Incluye maleta documentada. Del T4 al T1 hay autobús gratis entre terminales.', links:()=>[['Buscar vuelos MAD → GDL', gf('MAD','GDL','2026-11-08')], ['Aeroméxico', 'https://aeromexico.com/es-mx']]},
+
+  {id:'h1', res:'Ya. 29 oct al 2 nov, habitación doble con baño privado.', cat:'hotel', city:'paris', date:'2026-10-29', out:'2026-11-02', nights:4, k:'Hotel económico', t:'Hotel de France Gare de Lyon Bastille', sub:'Sencillo pero calificado con 9.2 de 10, a 200 m de Gare de Lyon: RER A directo a Disneyland y metro 14 directo a Orly.', cur:'EUR', price:105, unit:'noche', tax:3,
+    note:'Una habitación doble, 4 noches. Habitaciones pequeñas, como casi todo París. El impuesto turístico se paga en el hotel.', links:()=>[['Ver en Booking', bk('Hotel de France Gare de Lyon Bastille','2026-10-29','2026-11-02')], ['Comparar en Google Hoteles', gh('Hotel de France Gare de Lyon Bastille Paris')]]},
+  {id:'h2', res:'Ya. 2 al 5 nov, habitación doble.', cat:'hotel', city:'roma', date:'2026-11-02', out:'2026-11-05', nights:3, k:'Hotel 4★ · el gusto del viaje', t:'Albergo del Senato', sub:'Frente al Panteón, con terraza en la azotea que mira directo a la cúpula. Calificación 9.2 a 9.6 de 10. A pasos de Piazza Navona y la Fontana di Trevi.', cur:'EUR', price:260, unit:'noche', tax:7.5,
+    note:'Una habitación doble, 3 noches. Es el hotel especial del viaje pero a mitad de precio que un 5 estrellas. Roma cobra el impuesto por persona y noche.', links:()=>[['Ver en Booking', bk('Albergo del Senato Roma','2026-11-02','2026-11-05')], ['Comparar en Google Hoteles', gh('Albergo del Senato Rome')]]},
+  {id:'h3', res:'Ya. 5 al 7 nov. Elijan habitación doble con baño privado.', cat:'hotel', city:'florencia', date:'2026-11-05', out:'2026-11-07', nights:2, k:'Hotel económico', t:'Hotel Dalì', sub:'Hotel familiar muy querido (8.7 de 10) a 10 minutos caminando del Duomo y de la Piazza della Signoria.', cur:'EUR', price:85, unit:'noche', tax:3.5,
+    note:'Una habitación doble, 2 noches. Tiene cuartos con baño compartido: asegúrense de elegir uno con baño privado. Impuesto de Florencia: €3.50 por persona y noche.', links:()=>[['Ver en Booking', bk('Hotel Dali Florence','2026-11-05','2026-11-07')], ['Comparar en Google Hoteles', gh('Hotel Dali Florence')]]},
+  {id:'h4', res:'Ya. 7 al 8 nov, habitación doble.', cat:'hotel', city:'milan', date:'2026-11-07', out:'2026-11-08', nights:1, k:'Hotel económico', t:'Smart Hotel Milano', sub:'Moderno y sencillo (8.6 de 10), a 100 m de Milano Centrale: bajan del tren y al día siguiente toman ahí el tren al aeropuerto.', cur:'EUR', price:65, unit:'noche', tax:3,
+    note:'Una habitación doble, 1 noche. Solo para dormir: lo importante es que está junto a la estación.', links:()=>[['Ver en Booking', bk('Smart Hotel Milano','2026-11-07','2026-11-08')], ['Comparar en Google Hoteles', gh('Smart Hotel Milano')]]},
+  {id:'e1', res:'Obligatorio. Elijan «1 día, 1 parque» con fecha 31 de octubre. Es Halloween y se agotan.', cat:'entrada', city:'paris', date:'2026-10-31', k:'Parque', t:'Disneyland Paris en Halloween', sub:'Entrada con fecha a un parque para el sábado 31. Es fecha de temporada alta: para los dos parques (Disneyland y Disney Adventure World) son unos €135.', cur:'EUR', price:110, unit:'pp',
+    note:'Es el día más lleno de la temporada de Halloween: compren ya, porque las entradas con fecha se pueden agotar y en taquilla salen mucho más caras. Lleguen a la apertura y usen la app para ver los tiempos de espera.', links:()=>[['Disneyland Paris', 'https://www.disneylandparis.com/es-es/']]},
+  {id:'e2', res:'Opcional. Se compra en línea el mismo día; el boleto es abierto, sin hora.', cat:'entrada', city:'paris', date:'2026-10-29', k:'Crucero', t:'Crucero por el Sena', sub:'Una hora por el río al atardecer, desde la Torre Eiffel.', cur:'EUR', price:18, unit:'pp', note:'', links:()=>[['Bateaux Parisiens', 'https://www.bateauxparisiens.com/es.html']]},
+  {id:'e3', res:'Obligatorio. Viernes 30 de octubre a las 9:00. El Louvre ya no vende sin hora.', cat:'entrada', city:'paris', date:'2026-10-30', k:'Museo', t:'Museo del Louvre', sub:'Entrada con hora. Desde enero de 2026 los visitantes de fuera de la UE pagan €32.', cur:'EUR', price:32, unit:'pp', note:'Cierra los martes. Reserven la hora de las 9:00.', links:()=>[['Boletos oficiales del Louvre', 'https://www.louvre.fr/es']]},
+  {id:'e4', res:'Muy recomendado. Viernes 30 de octubre hacia las 18:00, «cumbre en ascensor». Sin reserva la fila es de 1 a 2 horas.', cat:'entrada', city:'paris', date:'2026-10-30', k:'Monumento', t:'Torre Eiffel hasta la cumbre', sub:'Ascensor hasta arriba. Solo al segundo piso: €23.50.', cur:'EUR', price:36.7, unit:'pp', note:'De noche la torre brilla 5 minutos cada hora en punto.', links:()=>[['Sitio oficial de la Torre Eiffel', 'https://www.toureiffel.paris/es']]},
+  {id:'e5', res:'Obligatorio aunque es gratis. Domingo 1 de noviembre a las 9:00, entrada gratuita de primer domingo.', cat:'entrada', city:'paris', date:'2026-11-01', k:'Palacio', t:'Palacio de Versalles', sub:'El primer domingo de noviembre la entrada es gratis para todos.', cur:'EUR', price:0, unit:'pp', note:'Aunque es gratis hay que reservar horario en línea. Otro día cuesta unos €25 por persona.', links:()=>[['Reservar horario gratis', 'https://www.chateauversailles.fr/'], ['Condiciones de entrada gratis', 'https://en.chateauversailles.fr/plan-your-visit/conditions-free-admission']]},
+  {id:'e6', res:'Obligatorio. Martes 3 de noviembre a las 8:00. Usen solo el sitio oficial.', cat:'entrada', city:'roma', date:'2026-11-03', k:'Museo', t:'Museos Vaticanos y Capilla Sixtina', sub:'€20 más €5 de reserva en línea. La Basílica de San Pedro es gratis.', cur:'EUR', price:25, unit:'pp', note:'Cerrados los domingos. Los horarios se abren 60 días antes.', links:()=>[['Boletos oficiales del Vaticano', 'https://tickets.museivaticani.va/']]},
+  {id:'e7', res:'Obligatorio. Miércoles 4 de noviembre a las 9:00. Los horarios salen por lotes y se acaban rápido.', cat:'entrada', city:'roma', date:'2026-11-04', k:'Monumento', t:'Coliseo, Foro Romano y Palatino', sub:'€18 más €2 de reserva. Un solo boleto para los tres sitios.', cur:'EUR', price:20, unit:'pp', note:'Con los subterráneos (hipogeo) cuesta más; vale la pena si quedan lugares.', links:()=>[['Parque Arqueológico del Coliseo', 'https://colosseo.it/en/']]},
+  {id:'e8', res:'Opcional. Se puede comprar en línea o en la entrada; en fin de semana hay fila.', cat:'entrada', city:'roma', date:'2026-11-02', k:'Monumento', t:'Panteón', sub:'Entrada general.', cur:'EUR', price:5, unit:'pp', note:'', links:()=>[['Panteón (Museos Italianos)', 'https://www.museiitaliani.it/']]},
+  {id:'e9', res:'Obligatorio para subir la cúpula. Jueves 5 de noviembre, horario de cúpula a las 13:00.', cat:'entrada', city:'florencia', date:'2026-11-05', k:'Catedral', t:'Duomo: Brunelleschi Pass', sub:'Cúpula, campanario, baptisterio y museo. Es el único pase que incluye subir la cúpula.', cur:'EUR', price:30, unit:'pp', note:'La cúpula cierra por mantenimiento del 16 al 20 de noviembre; sus fechas no se cruzan.', links:()=>[['Boletos del Duomo', 'https://duomo.firenze.it/es']]},
+  {id:'e10', res:'Obligatorio. Viernes 6 de noviembre a las 8:15. El boleto lleva el nombre de cada uno tal como en el pasaporte.', cat:'entrada', city:'florencia', date:'2026-11-06', k:'Museo', t:'Galería Uffizi', sub:'€29 en línea con hora. El boleto lleva su nombre: lleven pasaporte.', cur:'EUR', price:29, unit:'pp', note:'', links:()=>[['Boletos oficiales de los Uffizi', 'https://www.uffizi.it/es/entradas']]},
+  {id:'e12', res:'Recomendado. Sábado 7 de noviembre hacia las 14:00, «Duomo Pass» con ascensor a la azotea.', cat:'entrada', city:'milan', date:'2026-11-07', k:'Catedral', t:'Duomo de Milán y azotea', sub:'Catedral y terrazas en el techo, subiendo en ascensor. Por escaleras cuesta €22.', cur:'EUR', price:26, unit:'pp', note:'', links:()=>[['Boletos oficiales del Duomo de Milán', 'https://www.duomomilano.it/es/']]},
+  {id:'e13', res:'Opcional y difícil. Los boletos de noviembre salieron a la venta en junio y casi seguro ya se agotaron; cada miércoles a las 12:00 liberan unos pocos para la semana siguiente.', cat:'entrada', city:'milan', date:'2026-11-07', k:'Museo', t:'La Última Cena de Leonardo', sub:'Visita de 15 minutos con hora exacta. Solo se compra en el sitio oficial.', cur:'EUR', price:15, unit:'pp', note:'Intenten el miércoles 4 de noviembre a las 12:00 (hora de Italia) para el sábado 7 en la tarde.', links:()=>[['Boletos oficiales (Cenacolo Vinciano)', 'https://cenacolovinciano.org/en/']]},
+  {id:'e11', res:'Obligatorio. Viernes 6 de noviembre a las 15:00.', cat:'entrada', city:'florencia', date:'2026-11-06', k:'Museo', t:'Galleria dell’Accademia (el David)', sub:'Subió a €20 en febrero de 2026; en línea con reserva, unos €24.', cur:'EUR', price:24, unit:'pp', note:'', links:()=>[['Galleria dell’Accademia', 'https://www.galleriaaccademiafirenze.it/es/']]},
+];
+
+const DAYS = [
+  {date:'2026-10-29', city:'paris', t:'Madrid → París', items:['g0','v1','t1','h1','e2'], steps:[
+    ['05:00','Llegan a Madrid-Barajas. Migración, registro biométrico de la UE y maletas. Desayuno en la terminal.'],
+    ['11:30','Iberia IB 573 de la T4 a París-Orly. Llegan a las 13:35.','Son dos boletos separados: si su vuelo a Madrid se retrasa, Iberia no está obligada a cambiar este. Por eso hay 6 horas y media de margen.'],
+    ['14:30','Metro 14 de Orly a Gare de Lyon (25 min). Dejan las maletas en el hotel.'],
+    ['16:00','Notre-Dame (gratis) y la Île de la Cité.'],
+    ['18:30','Crucero por el Sena al atardecer. Cena temprano: fue un día largo.']]},
+  {date:'2026-10-30', city:'paris', t:'Louvre y Torre Eiffel', items:['e3','e4'], steps:[
+    ['09:00','Louvre con hora reservada: Mona Lisa, Venus de Milo, Victoria de Samotracia.'],
+    ['13:00','Jardín de las Tullerías, Plaza de la Concordia y Campos Elíseos hasta el Arco del Triunfo.'],
+    ['18:00','Torre Eiffel hasta la cumbre, de noche.'],
+    ['21:00','Cena temprano y a dormir: mañana es Disney desde la apertura.']]},
+  {date:'2026-10-31', city:'paris', t:'Disneyland Paris en Halloween', items:['e1','t2'], steps:[
+    ['08:00','RER A directo de Gare de Lyon a Marne-la-Vallée–Chessy (40 min).'],
+    ['09:00','Disneyland Park desde la apertura, con decoración y desfiles de Halloween.','Es el día más lleno del año en el parque: hagan primero las atracciones más populares y descarguen la app de Disneyland Paris para ver tiempos de espera.'],
+    ['Noche','Espectáculo nocturno frente al castillo y RER A de regreso.']]},
+  {date:'2026-11-01', city:'paris', t:'Versalles gratis', items:['e5'], steps:[
+    ['08:30','RER C a Versailles Château Rive Gauche (unos 40 min).'],
+    ['09:00','Palacio y jardines de Versalles, gratis por ser primer domingo de noviembre.','Es día festivo (Todos los Santos) y habrá gente: lleguen a la apertura con su horario reservado.'],
+    ['16:00','Montmartre y el Sacré-Cœur al atardecer.']]},
+  {date:'2026-11-02', city:'roma', t:'París → Roma', items:['v2','t3','h2','e8'], steps:[
+    ['07:45','Metro 14 de Gare de Lyon a Orly (25 min).'],
+    ['09:55','Transavia TO 3914 a Roma-Fiumicino. Llegan a las 12:00.'],
+    ['12:45','Taxi de tarifa fija al Albergo del Senato, frente al Panteón.'],
+    ['17:00','Panteón, Fontana di Trevi y Piazza Navona de noche. Un aperitivo en la azotea del hotel viendo la cúpula del Panteón.']]},
+  {date:'2026-11-03', city:'roma', t:'El Vaticano', items:['e6','t4'], steps:[
+    ['08:00','Museos Vaticanos y Capilla Sixtina con hora reservada.'],
+    ['12:30','Basílica de San Pedro (gratis). Ropa que cubra hombros y rodillas.'],
+    ['16:00','Castel Sant’Angelo por fuera y cena en Trastevere.']]},
+  {date:'2026-11-04', city:'roma', t:'Roma antigua', items:['e7'], steps:[
+    ['09:00','Coliseo, Foro Romano y Palatino. El boleto vale 24 horas.'],
+    ['15:00','Piazza di Spagna, Via del Corso y helado.']]},
+  {date:'2026-11-05', city:'florencia', t:'Roma → Florencia', items:['t5','h3','e9'], steps:[
+    ['08:40','Taxi del hotel a Roma Termini.'],
+    ['09:10','Frecciarossa de Roma Termini a Firenze S.M.N. (1 h 35 min).'],
+    ['11:00','Dejan maletas en el Hotel Dalì (15 min caminando).'],
+    ['13:00','Duomo y subida a la cúpula de Brunelleschi con hora reservada (463 escalones).'],
+    ['17:00','Ponte Vecchio y atardecer en el Piazzale Michelangelo.']]},
+  {date:'2026-11-06', city:'florencia', t:'Uffizi y el David', items:['e10','e11'], steps:[
+    ['08:15','Galería Uffizi: Botticelli, Leonardo y Caravaggio.'],
+    ['13:00','Comida en el Mercado Central (lampredotto o pasta fresca).'],
+    ['15:00','Galleria dell’Accademia para ver el David de Miguel Ángel.']]},
+  {date:'2026-11-07', city:'milan', t:'Florencia → Milán', items:['t6','h4','e12','e13'], steps:[
+    ['09:00','Frecciarossa de Firenze S.M.N. a Milano Centrale (1 h 55 min). Dejan maletas en el Smart Hotel, junto a la estación.'],
+    ['13:00','Galleria Vittorio Emanuele II y el Duomo de Milán, con subida a la azotea.'],
+    ['16:00','Teatro alla Scala por fuera y, si consiguieron boletos, La Última Cena.'],
+    ['19:00','Aperitivo en los canales de Navigli.']]},
+  {date:'2026-11-08', city:'gdl', t:'Regreso a Guadalajara', items:['t7','v3','v4'], steps:[
+    ['Temprano','Tren al aeropuerto de Milán y vuelo a Madrid.'],
+    ['11:00','Llegan a Madrid y pasan a la Terminal 1 (autobús gratis entre terminales).'],
+    ['14:35','Aeroméxico AM 39, directo a Guadalajara.'],
+    ['19:00','Llegan a Guadalajara.','Hora de Guadalajara, el mismo domingo.']]}
+];
+
+const PEOPLE = ['Eric','Xime'];
+const OWNER_DEF = {g0:'Eric', e1:'Xime', e3:'Xime', e4:'Xime', e5:'Xime', e6:'Xime', e7:'Xime', e9:'Xime', e10:'Xime', e11:'Xime', e12:'Xime', e13:'Xime', t5:'Xime', h1:'Xime', h3:'Xime', v3:'Xime', v4:'Xime'};
+const KEY = 'europa-2026-v1';
+const DEF = {fxEur:1.12, fxMxn:18.35, pax:2, tab:'dias', prices:{}, booked:{}, owner:{}, capEu:4500, food:1000, ownerV:2};
+let S; try { S = Object.assign({}, DEF, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch(e){ S = Object.assign({}, DEF); }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} };
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pax = () => Math.max(1, Math.round(+S.pax || 2));
+const priceOf = it => S.prices[it.id] != null ? +S.prices[it.id] : it.price;
+function totalCur(it){ const p = priceOf(it), n = pax();
+  if (it.unit==='pp') return p*n;
+  if (it.unit==='noche') return (p + (it.tax||0)*n) * it.nights;
+  if (it.unit==='ppdia') return p*n*it.days;
+  return p; }
+const toUsd = (v, cur) => cur==='EUR' ? v*S.fxEur : v;
+const usd = it => toUsd(totalCur(it), it.cur);
+const fUsd = v => 'US$' + Math.round(v).toLocaleString('es-MX');
+const fMxn = v => 'MX$' + Math.round(v*S.fxMxn).toLocaleString('es-MX');
+const fCur = (v, cur) => (cur==='EUR' ? '€' : 'US$') + (Math.round(v*100)/100).toLocaleString('es-MX', {maximumFractionDigits:2});
+const fmtDay = d => new Date(d+'T12:00:00').toLocaleDateString('es-MX', {weekday:'long', day:'numeric', month:'short'});
+const byId = id => ITEMS.find(i=>i.id===id);
+if (!S.owner || S.ownerV !== 2){ S.owner = {}; S.ownerV = 2; } if (S.booked.g0 == null) S.booked.g0 = true;
+const ownerOf = i => S.owner[i.id] || OWNER_DEF[i.id] || 'Eric';
+const ownerSel = (i, idp='o') => `<select id="${idp}_${i.id}" data-owner="${i.id}" aria-label="Quién paga ${esc(i.t)}" class="osel">${PEOPLE.map(n=>`<option ${ownerOf(i)===n?'selected':''}>${n}</option>`).join('')}</select>`;
+
+const DAYS_N = 11;
+const foodUsd = () => Math.max(0, +S.food || 0);
+const euItems = () => ITEMS.filter(i=>i.cat!=='vuelo');
+const euSpend = () => euItems().reduce((a,i)=>a+usd(i),0) + foodUsd();
+function caps(){
+  const cap = Math.max(0, +S.capEu || 0), eu = euSpend(), left = cap - eu, f = foodUsd();
+  $('#caps').innerHTML = `<div class="cap ${left<0?'over':''}"><div class="hd"><div class="eyebrow">Presupuesto sin vuelos</div><label for="capEu">Tope US$<input id="capEu" type="number" min="0" step="50" value="${cap}"></label></div>
+      <div class="big" style="font-size:24px">${fMxn(eu)} <small>de ${fMxn(cap)}</small></div>
+      <div class="bar"><i style="width:${cap?Math.min(100,eu/cap*100):100}%"></i></div>
+      <div class="st">${left>=0?`Quedan <b>${fMxn(left)}</b> (${fUsd(left)}) para extras.`:`<b>Se pasan por ${fMxn(-left)}</b> (${fUsd(-left)}). Bajen algo o suban el tope.`} <span class="muted">Hoteles, trenes, traslados, entradas y comida, para ${pax()}. Todos los vuelos van aparte.</span></div></div>
+    <div class="cap"><div class="hd"><div class="eyebrow">Comida (dentro del presupuesto)</div><label for="food">US$<input id="food" type="number" min="0" step="50" value="${f}"></label></div>
+      <div class="big" style="font-size:24px">${fMxn(f)}</div>
+      <div class="st">Son <b>${fMxn(f/DAYS_N)}</b> al día para los dos (${fUsd(f/DAYS_N)}, unos €${Math.round(f/DAYS_N/S.fxEur)}) durante ${DAYS_N} días. <span class="muted">Desayuno de panadería, una comida fuerte y una cena sencilla.</span></div></div>`;
+}
+function totals(){
+  caps();
+  const items = ITEMS.reduce((a,i)=>a+usd(i),0), all = items + foodUsd(), bk = ITEMS.filter(i=>S.booked[i.id]).reduce((a,i)=>a+usd(i),0);
+  const n = ITEMS.filter(i=>priceOf(i)>0).length, nb = ITEMS.filter(i=>S.booked[i.id] && priceOf(i)>0).length;
+  $('#totals').innerHTML = `<div><div class="eyebrow">Total del viaje para ${pax()}, con comida</div><div class="big">${fMxn(all)}</div><div class="sub">${fUsd(all)} dólares · incluye ${fMxn(foodUsd())} de comida</div></div>
+    <div><div class="eyebrow">Por persona</div><div class="big" style="font-size:24px">${fMxn(all/pax())}</div><div class="sub muted">${fUsd(all/pax())}</div></div>
+    <div><div class="eyebrow">Ya reservado</div><div class="big" style="font-size:24px">${fMxn(bk)}</div><div class="sub muted">${fUsd(bk)} · ${nb} de ${n} cosas · faltan ${fMxn(items-bk)}</div><div class="bar"><i style="width:${all?bk/all*100:0}%"></i></div></div>`;
+}
+const moneyLine = it => { const t = totalCur(it); return `<span class="money">${fMxn(usd(it))} <small>· ${fUsd(usd(it))}</small></span>`; };
+function unitLabel(it){ const n = pax();
+  if (it.unit==='pp') return `por persona × ${n}`;
+  if (it.unit==='noche') return `por noche × ${it.nights} noches${it.tax?` + impuesto ${fCur(it.tax,it.cur)} por persona y noche`:''}`;
+  if (it.unit==='ppdia') return `por persona al día × ${n} × ${it.days} días`;
+  if (it.unit==='grupo') return 'por auto, total';
+  return ''; }
+function ticket(it){
+  const c = CITY[it.city];
+  return `<article class="tk ${S.booked[it.id]?'done':''}" style="--c:${c.c}">
+    ${S.booked[it.id]?'<span class="stampd">RESERVADO</span>':''}
+    <div class="th"><div style="min-width:0"><div class="k">${esc(it.k)} · ${esc(c.n)}</div><h3>${esc(it.t)}</h3></div><div class="dt">${new Date(it.date+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'short'})}${it.out?`<br>→ ${new Date(it.out+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'short'})}`:''}</div></div>
+    <div class="tb"><p>${esc(it.sub)}</p>${it.note?`<p class="muted">${esc(it.note)}</p>`:''}
+      <div class="price"><label for="p_${it.id}">Precio</label><span class="in">${it.cur==='EUR'?'€':'US$'}<input id="p_${it.id}" type="number" min="0" step="0.5" value="${priceOf(it)}" data-price="${it.id}" aria-label="Precio de ${esc(it.t)}"><small class="muted" style="font-family:var(--f-body);font-weight:500">${unitLabel(it)}</small></span>
+        <label>Total</label><span>${moneyLine(it)}</span></div></div>
+    <div class="tf">${it.links().map(([l,u],i)=>`<a class="btn ${i?'alt':''}" href="${esc(u)}" target="_blank" rel="noopener">${esc(l)} ↗</a>`).join('')}
+      <label class="paga" for="o_${it.id}">Paga ${ownerSel(it)}</label>
+      ${priceOf(it)>0||it.cat!=='entrada'?`<label class="chk" for="b_${it.id}"><input type="checkbox" id="b_${it.id}" data-book="${it.id}" ${S.booked[it.id]?'checked':''}>Reservado</label>`:`<label class="chk" for="b_${it.id}"><input type="checkbox" id="b_${it.id}" data-book="${it.id}" ${S.booked[it.id]?'checked':''}>Horario reservado</label>`}</div>
+  </article>`;
+}
+function vDias(){
+  return DAYS.map(d=>{ const c = CITY[d.city]; const its = d.items.map(byId); const cost = its.reduce((a,i)=>a+usd(i),0); const n = pax();
+    return `<section class="day" style="--c:${c.c}"><div class="dhead"><div class="d">${new Date(d.date+'T12:00:00').getDate()} ${new Date(d.date+'T12:00:00').toLocaleDateString('es-MX',{month:'short'})}</div><div class="w">${new Date(d.date+'T12:00:00').toLocaleDateString('es-MX',{weekday:'long'})}</div><span class="chip">${esc(c.n)}</span></div>
+      <div class="dbody"><h3>${esc(d.t)}</h3><ul class="steps">${d.steps.map(([h,t,tip])=>`<li><span class="h">${esc(h)}</span><span>${esc(t)}${tip?`<br><span class="tip">${esc(tip)}</span>`:''}</span></li>`).join('')}</ul>
+      <div class="daycost">Lo que se paga este día para ${n}: ${its.map(i=>`${esc(i.t)} <b>${fMxn(usd(i))}</b> (${fUsd(usd(i))})`).join(' · ')}</div></div></section>`; }).join('');
+}
+function vList(cats, title, intro){
+  const its = ITEMS.filter(i=>cats.includes(i.cat)); const tot = its.reduce((a,i)=>a+usd(i),0);
+  return `<div class="sec-h"><h2>${title}</h2><span class="muted"><b class="mono" style="color:var(--ink)">${fMxn(tot)}</b> · ${fUsd(tot)} para ${pax()}</span></div>${intro?`<p class="muted" style="margin:-4px 0 14px;max-width:70ch">${intro}</p>`:''}<div class="grid">${its.map(ticket).join('')}</div>`;
+}
+function vPres(){
+  const all = ITEMS.reduce((a,i)=>a+usd(i),0) + foodUsd();
+  const cats = [...Object.entries(CAT).map(([k,l])=>({l, v:ITEMS.filter(i=>i.cat===k).reduce((a,i)=>a+usd(i),0)})), {l:'Comida', v:foodUsd(), c:'var(--gold)'}].sort((a,b)=>b.v-a.v);
+  const cities = Object.entries(CITY).map(([k,c])=>({l:c.n, c:c.c, v:ITEMS.filter(i=>i.city===k).reduce((a,i)=>a+usd(i),0)})).filter(x=>x.v>0);
+  const max1 = Math.max(...cats.map(x=>x.v)), max2 = Math.max(...cities.map(x=>x.v));
+  const row = (x, max) => `<div class="row" style="--c:${x.c||'var(--pass)'}"><span class="t">${esc(x.l)}</span><span class="tr"><i style="width:${x.v/max*100}%"></i></span><span class="v">${fMxn(x.v)}<small>${fUsd(x.v)}</small></span></div>`;
+  return `<div class="bud"><div class="box"><h3>Por tipo de gasto</h3>${cats.map(x=>row(x,max1)).join('')}</div><div class="box"><h3>Por ciudad</h3>${cities.map(x=>row(x,max2)).join('')}</div></div>
+    <div class="sec-h"><h2>Todo el viaje</h2><span class="muted">Marca lo que ya pagaste</span></div>
+    <div class="tablewrap"><table><thead><tr><th></th><th>Fecha</th><th>Concepto</th><th>Ciudad</th><th class="r">Precio</th><th class="r">Para ${pax()} en pesos</th><th class="r">En dólares</th></tr></thead><tbody>
+    ${[...ITEMS].sort((a,b)=>a.date.localeCompare(b.date)).map(i=>`<tr><td><input type="checkbox" id="tb_${i.id}" data-book="${i.id}" ${S.booked[i.id]?'checked':''} aria-label="Reservado: ${esc(i.t)}" style="width:17px;height:17px;accent-color:var(--pass)"></td><td class="num">${new Date(i.date+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'short'})}</td><td>${esc(i.t)}<br><small class="muted">${esc(CAT[i.cat])}</small></td><td>${esc(CITY[i.city].n)}</td><td class="r num">${fCur(priceOf(i),i.cur)}<br><small class="muted" style="font-family:var(--f-body)">${i.unit==='pp'?'c/u':i.unit==='noche'?'noche':i.unit==='ppdia'?'c/u al día':''}</small></td><td class="r num"><b>${fMxn(usd(i))}</b></td><td class="r num muted">${fUsd(usd(i))}</td></tr>`).join('')}
+    <tr><td></td><td class="num">29 oct – 8 nov</td><td>Comida<br><small class="muted">Presupuesto para los dos</small></td><td>Todo el viaje</td><td class="r num">${fUsd(foodUsd())}</td><td class="r num"><b>${fMxn(foodUsd())}</b></td><td class="r num muted">${fUsd(foodUsd())}</td></tr>
+    <tr class="tot"><td></td><td></td><td>Total</td><td></td><td></td><td class="r num">${fMxn(all)}</td><td class="r num">${fUsd(all)}</td></tr></tbody></table></div>
+    <div class="notes">
+      <div class="box"><h3>Documentos</h3><p>Pasaporte vigente al menos 3 meses después del regreso. Los mexicanos no necesitan visa para Europa. En la primera entrada al espacio Schengen (Madrid) les toman huellas y foto: cuenten con fila.</p></div>
+      <div class="box"><h3>Pagos</h3><p>Usen tarjeta sin comisión por compras en el extranjero y paguen siempre en euros, no en pesos, cuando la terminal pregunte. Lleven unos €100 en efectivo.</p></div>
+      <div class="box"><h3>Clima</h3><p>Fin de octubre y principios de noviembre: París entre 6 y 14 °C, Roma y Florencia entre 9 y 19 °C. Chamarra ligera, paraguas y zapatos cómodos.</p></div>
+    </div>`;
+}
+function vReservar(){
+  const groups = [
+    ['Museos y entradas con hora', 'Sin reserva no los dejan entrar o la fila es de horas. Faltan dos semanas: resérvenlo todo ya.', ITEMS.filter(i=>i.cat==='entrada' && /^Obligatorio|^Muy/.test(i.res||''))],
+    ['Vuelos, tren y hoteles', 'Los precios suben cada día que pasa.', ITEMS.filter(i=>['vuelo','hotel'].includes(i.cat) || i.id==='t5')],
+    ['Opcional', 'Se puede comprar allá.', ITEMS.filter(i=>i.cat==='entrada' && /^Opcional/.test(i.res||''))]];
+  const left = ITEMS.filter(i=>i.res && !S.booked[i.id]);
+  const row = i => { const c = CITY[i.city]; return `<tr style="--c:${c.c}"><td><input type="checkbox" id="rb_${i.id}" data-book="${i.id}" ${S.booked[i.id]?'checked':''} aria-label="Reservado: ${esc(i.t)}" style="width:18px;height:18px;accent-color:var(--pass)"></td>
+    <td class="num">${new Date(i.date+'T12:00:00').toLocaleDateString('es-MX',{weekday:'short',day:'numeric',month:'short'})}</td>
+    <td><b>${esc(i.t)}</b> <span class="who">${esc(ownerOf(i))}</span><br><small class="muted">${esc(c.n)} · ${esc(i.res)}</small></td>
+    <td class="r num">${priceOf(i)>0?`${fCur(priceOf(i),i.cur)}<br><small class="muted" style="font-family:var(--f-body)">${i.unit==='pp'?'por persona':i.unit==='noche'?'por noche':''}</small>`:'Gratis'}</td>
+    <td class="r num">${priceOf(i)>0?`<b>${fMxn(usd(i))}</b><br><small class="muted">${fUsd(usd(i))}</small>`:'–'}</td>
+    <td>${i.links().slice(0,1).map(([l,u])=>`<a class="btn" href="${esc(u)}" target="_blank" rel="noopener">Reservar ↗</a>`).join('')}</td></tr>`; };
+  return `<div class="sec-h"><h2>Reservar antes de salir</h2><span class="muted">${left.length ? `${left.length} pendientes · ${fMxn(left.reduce((a,i)=>a+usd(i),0))} · ${fUsd(left.reduce((a,i)=>a+usd(i),0))} para ${pax()}` : 'Todo reservado'}</span></div>
+    <p class="muted" style="margin:-4px 0 16px;max-width:72ch">Cada renglón dice qué fecha y hora elegir. Los totales son para ${pax()} personas. Marquen la casilla al terminar.</p>
+    ${groups.map(([h,sub,its])=>`<h3 style="font-size:20px;margin:22px 0 4px">${h}</h3><p class="muted" style="margin:0 0 10px;font-size:13.5px">${sub}</p>
+      <div class="tablewrap"><table><thead><tr><th></th><th>Fecha</th><th>Qué reservar</th><th class="r">Precio</th><th class="r">Para ${pax()}</th><th></th></tr></thead><tbody>${its.map(row).join('')}</tbody></table></div>`).join('')}`;
+}
+function vCuentas(){
+  const all = ITEMS.reduce((a,i)=>a+usd(i),0);
+  const per = PEOPLE.map(n=>{ const its = ITEMS.filter(i=>ownerOf(i)===n).sort((a,b)=>a.date.localeCompare(b.date)); return {n, its, v:its.reduce((a,i)=>a+usd(i),0), paid:its.filter(i=>S.booked[i.id]).reduce((a,i)=>a+usd(i),0)}; });
+  const half = all/2; const [A,B] = per; const diff = A.v - half;
+  const settle = Math.abs(diff) < 1 ? 'Ya quedan parejos.' : diff > 0 ? `Para quedar parejos, <b>Xime le pasa a Eric ${fMxn(diff)}</b> <span class="muted">(${fUsd(diff)})</span>.` : `Para quedar parejos, <b>Eric le pasa a Xime ${fMxn(-diff)}</b> <span class="muted">(${fUsd(-diff)})</span>.`;
+  const col = x => `<div class="box"><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><h3 style="margin:0">${x.n}</h3><span class="muted">${x.its.length} cosas</span></div>
+    <div class="big" style="font-size:26px;margin-top:6px">${fMxn(x.v)}</div><div class="sub muted">${fUsd(x.v)} · ya pagado ${fMxn(x.paid)}</div>
+    <div class="bar" style="margin-bottom:12px"><i style="width:${x.v?x.paid/x.v*100:0}%"></i></div>
+    <div class="list2">${x.its.map(i=>`<div class="li ${S.booked[i.id]?'ok':''}"><input type="checkbox" id="cb_${i.id}" data-book="${i.id}" ${S.booked[i.id]?'checked':''} aria-label="Reservado: ${esc(i.t)}"><div style="min-width:0"><label for="cb_${i.id}"><b>${esc(i.t)}</b></label><br><small class="muted">${new Date(i.date+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'short'})} · ${esc(CITY[i.city].n)}${i.links().length?` · <a href="${esc(i.links()[0][1])}" target="_blank" rel="noopener">reservar ↗</a>`:''}</small></div><div class="amt"><b>${fMxn(usd(i))}</b><small>${fUsd(usd(i))}</small>${ownerSel(i,'co')}</div></div>`).join('')}</div></div>`;
+  return `<div class="sec-h"><h2>Cuentas de Eric y Xime</h2><span class="muted">Total ${fMxn(all)} · a cada quien le toca ${fMxn(half)}</span></div>
+    <div class="warn" style="font-size:15px;margin-bottom:16px">${settle} Cambien quién paga cada cosa con el menú y todo se recalcula. La comida (${fMxn(foodUsd())}) va mitad y mitad: ${fMxn(foodUsd()/2)} cada quien.</div>
+    <div class="bud">${col(A)}${col(B)}</div>`;
+}
+function vIdeas(){
+  const ideas = [
+    ['Disneyland: los dos parques el mismo día', 'Disneyland Park y Disney Adventure World con la misma entrada.', 25, 'pp', 'https://www.disneylandparis.com/es-es/'],
+    ['Coliseo con subterráneos', 'Boleto que incluye los túneles bajo la arena (hipogeo), con hora.', 15, 'pp', 'https://colosseo.it/en/'],
+    ['Cena en crucero por el Sena', 'Cena de varios tiempos navegando frente a la Torre Eiffel iluminada.', 90, 'pp', 'https://www.bateauxparisiens.com/es.html'],
+    ['Clase de pasta en Florencia', 'Clase de 3 horas haciendo pasta fresca y tiramisú, con comida incluida.', 75, 'pp', 'https://www.getyourguide.es/florencia-l32/clases-de-cocina-tc71/']];
+  const left = (+S.capEu||0) - euSpend();
+  return `<div class="sec-h" style="margin-top:30px"><h2>Ideas para lo que ahorran</h2><span class="muted">No están sumadas · les quedan ${fMxn(Math.max(0,left))} en el presupuesto</span></div>
+    <div class="grid">${ideas.map(([t,d,p,u,l])=>{ const v = p*pax()*S.fxEur; return `<article class="tk" style="--c:var(--stamp)"><div class="th"><div style="min-width:0"><div class="k">Experiencia extra</div><h3>${esc(t)}</h3></div></div><div class="tb"><p>${esc(d)}</p><p><span class="money">${fMxn(v)} <small>· ${fUsd(v)} para ${pax()}</small></span><br><small class="muted">unos €${p} más por persona</small></p><p>${v<=left?'<span class="who">Cabe en el presupuesto</span>':'<span class="who" style="color:var(--stamp);background:var(--stamp-soft)">No cabe en el presupuesto</span>'}</p></div><div class="tf"><a class="btn" href="${l}" target="_blank" rel="noopener">Ver ↗</a></div></article>`; }).join('')}</div>`;
+}
+const VIEWS = {dias:vDias, reservar:vReservar, cuentas:vCuentas,
+  transporte:()=>vList(['vuelo','tren'],'Vuelos y trenes','Los vuelos por Europa son con aerolíneas que salen del mismo aeropuerto que su hotel. El tren de Roma a Florencia es más rápido que volar.'),
+  hoteles:()=>vList(['hotel'],'Hoteles','Hoteles económicos pero muy bien calificados y junto al transporte en París, Florencia y Milán, para gastar en experiencias. En Roma, un hotel especial frente al Panteón. Precio por habitación doble.')+vIdeas(),
+  entradas:()=>vList(['entrada'],'Entradas','Precios oficiales de 2026 por persona. Casi todo se compra con día y hora: reserven en cuanto tengan fechas.'),
+  presupuesto:vPres};
+function render(){
+  document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected', String(b.dataset.tab===S.tab)));
+  totals(); $('#panel').innerHTML = (VIEWS[S.tab]||vDias)();
+}
+$('#fxEur').value = S.fxEur; $('#fxMxn').value = S.fxMxn; $('#fxPax').value = pax();
+document.addEventListener('click', e => { const b = e.target.closest('.tabs button'); if (b){ S.tab = b.dataset.tab; save(); render(); } });
+document.addEventListener('change', e => { const el = e.target;
+  if (el.dataset.owner){ S.owner[el.dataset.owner] = el.value; save(); render(); return; }
+  if (el.dataset.book){ S.booked[el.dataset.book] = el.checked; save(); render(); return; }
+  if (el.dataset.price){ const v = parseFloat(el.value); if (v>=0){ S.prices[el.dataset.price] = v; } save(); render(); return; }
+  if (el.id==='fxEur'){ const v = parseFloat(el.value); if (v>0) S.fxEur = v; save(); render(); }
+  if (el.id==='fxMxn'){ const v = parseFloat(el.value); if (v>0) S.fxMxn = v; save(); render(); }
+  if (el.id==='capEu'){ const v = parseFloat(el.value); if (v>=0) S.capEu = v; save(); render(); return; }
+  if (el.id==='food'){ const v = parseFloat(el.value); if (v>=0) S.food = v; save(); render(); return; }
+  if (el.id==='fxPax'){ const v = parseInt(el.value,10); if (v>=1 && v<=10) S.pax = v; else el.value = pax(); save(); render(); }
+});
+render();
+})();
+</script>
+
+</body>
+</html>
