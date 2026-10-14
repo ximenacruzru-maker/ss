@@ -175,7 +175,7 @@ tr.tot td{font-weight:700;background:color-mix(in srgb,var(--ink) 4%,transparent
     <div>
       <div class="eyebrow">Itinerario para 2 · 29 oct – 8 nov 2026</div>
       <h1>Madrid, París, Roma, Florencia y Milán</h1>
-      <p>Llegan a Madrid a las 5:00 am y siguen a París el mismo día. Cuatro días en París con Disneyland en Halloween, tres en Roma en un hotel frente al Panteón, dos en Florencia, una noche en Milán y de regreso a Guadalajara en vuelo directo desde Madrid. Todo está calculado para Eric y Xime, en pesos y en dólares, con un presupuesto de US$4,500 para todo menos los vuelos, comida incluida.</p>
+      <p>Llegan a Madrid a las 5:00 am y siguen a París el mismo día. Cuatro días en París con Disneyland en Halloween, tres en Roma en un hotel frente al Panteón, dos en Florencia, una noche en Milán y de regreso a Guadalajara en vuelo directo desde Madrid. Todo está calculado para Eric y Xime, en pesos y en dólares, con un presupuesto de US$4,500 para los dos (sin comida ni vuelos) y US$1,000 de comida para los dos.</p>
     </div>
     <div class="fx" aria-label="Tipo de cambio">
       <label for="fxEur">1 € en US$<input id="fxEur" type="number" step="0.001" min="0.5"></label>
@@ -353,14 +353,14 @@ const ownerSel = (i, idp='o') => `<select id="${idp}_${i.id}" data-owner="${i.id
 const DAYS_N = 11;
 const foodUsd = () => Math.max(0, +S.food || 0);
 const euItems = () => ITEMS.filter(i=>i.cat!=='vuelo');
-const euSpend = () => euItems().reduce((a,i)=>a+usd(i),0) + foodUsd();
+const euSpend = () => euItems().reduce((a,i)=>a+usd(i),0);
 function caps(){
   const cap = Math.max(0, +S.capEu || 0), eu = euSpend(), left = cap - eu, f = foodUsd();
-  $('#caps').innerHTML = `<div class="cap ${left<0?'over':''}"><div class="hd"><div class="eyebrow">Presupuesto sin vuelos</div><label for="capEu">Tope US$<input id="capEu" type="number" min="0" step="50" value="${cap}"></label></div>
+  $('#caps').innerHTML = `<div class="cap ${left<0?'over':''}"><div class="hd"><div class="eyebrow">Presupuesto para los 2 (sin comida ni vuelos)</div><label for="capEu">Tope US$<input id="capEu" type="number" min="0" step="50" value="${cap}"></label></div>
       <div class="big" style="font-size:24px">${fMxn(eu)} <small>de ${fMxn(cap)}</small></div>
       <div class="bar"><i style="width:${cap?Math.min(100,eu/cap*100):100}%"></i></div>
-      <div class="st">${left>=0?`Quedan <b>${fMxn(left)}</b> (${fUsd(left)}) para extras.`:`<b>Se pasan por ${fMxn(-left)}</b> (${fUsd(-left)}). Bajen algo o suban el tope.`} <span class="muted">Hoteles, trenes, traslados, entradas y comida, para ${pax()}. Todos los vuelos van aparte.</span></div></div>
-    <div class="cap"><div class="hd"><div class="eyebrow">Comida (dentro del presupuesto)</div><label for="food">US$<input id="food" type="number" min="0" step="50" value="${f}"></label></div>
+      <div class="st">${left>=0?`Quedan <b>${fMxn(left)}</b> (${fUsd(left)}) para extras.`:`<b>Se pasan por ${fMxn(-left)}</b> (${fUsd(-left)}). Bajen algo o suban el tope.`} <span class="muted">Hoteles, trenes, traslados y entradas, para los ${pax()} juntos. La comida y los vuelos van aparte.</span></div></div>
+    <div class="cap"><div class="hd"><div class="eyebrow">Comida para los 2 (aparte)</div><label for="food">US$<input id="food" type="number" min="0" step="50" value="${f}"></label></div>
       <div class="big" style="font-size:24px">${fMxn(f)}</div>
       <div class="st">Son <b>${fMxn(f/DAYS_N)}</b> al día para los dos (${fUsd(f/DAYS_N)}, unos €${Math.round(f/DAYS_N/S.fxEur)}) durante ${DAYS_N} días. <span class="muted">Desayuno de panadería, una comida fuerte y una cena sencilla.</span></div></div>`;
 }
