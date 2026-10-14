@@ -41,6 +41,17 @@ a{color:var(--pass)}
 .top h1{font-size:clamp(34px,5vw,54px);line-height:1.02}
 .top p{margin:8px 0 0;max-width:62ch;color:var(--muted)}
 .fx{display:grid;grid-template-columns:repeat(3,auto);gap:10px;align-items:end}
+.capbar{margin-top:14px;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:14px}
+.cap{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;min-width:0}
+.cap .hd{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.cap .hd label{margin-left:auto;font-size:12px;color:var(--muted);font-weight:600;display:flex;gap:6px;align-items:center}
+.cap .hd input{width:90px;font:600 14px var(--f-mono);color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:4px 6px;text-align:right}
+.cap .bar{height:10px;border-radius:5px}
+.cap .bar i{background:var(--pass)}
+.cap.over .bar i{background:var(--stamp)}
+.cap .st{font-size:13.5px;margin-top:8px}
+.cap.over .st b{color:var(--stamp)}
+@media (max-width:760px){.capbar{grid-template-columns:1fr}}
 .fx label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:600}
 .fx input{width:96px;font:600 15px var(--f-mono);color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
 .fx small{grid-column:1/-1;font-size:11.5px;color:var(--muted);max-width:340px}
@@ -164,7 +175,7 @@ tr.tot td{font-weight:700;background:color-mix(in srgb,var(--ink) 4%,transparent
     <div>
       <div class="eyebrow">Itinerario para 2 · 29 oct – 8 nov 2026</div>
       <h1>Madrid, París, Roma, Florencia y Milán</h1>
-      <p>Llegan a Madrid a las 5:00 am y siguen a París el mismo día. Cuatro días en París con Disneyland en Halloween, tres en Roma con un hotel de lujo, dos en Florencia, una noche en Milán y de regreso a Guadalajara en vuelo directo desde Madrid. Todo está calculado para Eric y Xime, en pesos y en dólares, sin incluir comidas.</p>
+      <p>Llegan a Madrid a las 5:00 am y siguen a París el mismo día. Cuatro días en París con Disneyland en Halloween, tres en Roma con un hotel de lujo, dos en Florencia, una noche en Milán y de regreso a Guadalajara en vuelo directo desde Madrid. Todo está calculado para Eric y Xime, en pesos y en dólares, con un tope de US$4,500 para gastos en Europa y US$1,000 para comida.</p>
     </div>
     <div class="fx" aria-label="Tipo de cambio">
       <label for="fxEur">1 € en US$<input id="fxEur" type="number" step="0.001" min="0.5"></label>
@@ -184,6 +195,7 @@ tr.tot td{font-weight:700;background:color-mix(in srgb,var(--ink) 4%,transparent
   </nav>
 
   <section class="totals" id="totals" aria-live="polite"></section>
+  <section class="capbar" id="caps" aria-live="polite"></section>
 
   <div class="tabs" role="tablist">
     <button role="tab" id="t-dias" data-tab="dias" aria-selected="true">Día por día</button>
@@ -315,7 +327,7 @@ const DAYS = [
 const PEOPLE = ['Eric','Xime'];
 const OWNER_DEF = {g0:'Eric', h2:'Xime', h3:'Xime', e1:'Xime', v3:'Xime', v4:'Xime', h4:'Eric'};
 const KEY = 'europa-2026-v1';
-const DEF = {fxEur:1.12, fxMxn:18.35, pax:2, tab:'dias', prices:{}, booked:{}, owner:{}};
+const DEF = {fxEur:1.12, fxMxn:18.35, pax:2, tab:'dias', prices:{}, booked:{}, owner:{}, capEu:4500, food:1000};
 let S; try { S = Object.assign({}, DEF, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch(e){ S = Object.assign({}, DEF); }
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} };
 const $ = s => document.querySelector(s);
@@ -338,12 +350,28 @@ if (!S.owner) S.owner = {}; if (S.booked.g0 == null) S.booked.g0 = true;
 const ownerOf = i => S.owner[i.id] || OWNER_DEF[i.id] || 'Eric';
 const ownerSel = (i, idp='o') => `<select id="${idp}_${i.id}" data-owner="${i.id}" aria-label="Quién paga ${esc(i.t)}" class="osel">${PEOPLE.map(n=>`<option ${ownerOf(i)===n?'selected':''}>${n}</option>`).join('')}</select>`;
 
+const LONGHAUL = ['g0','v4'];
+const DAYS_N = 11;
+const euItems = () => ITEMS.filter(i=>!LONGHAUL.includes(i.id));
+const euSpend = () => euItems().reduce((a,i)=>a+usd(i),0);
+const foodUsd = () => Math.max(0, +S.food || 0);
+function caps(){
+  const cap = Math.max(0, +S.capEu || 0), eu = euSpend(), left = cap - eu, f = foodUsd();
+  $('#caps').innerHTML = `<div class="cap ${left<0?'over':''}"><div class="hd"><div class="eyebrow">Gastos en Europa</div><label for="capEu">Tope US$<input id="capEu" type="number" min="0" step="50" value="${cap}"></label></div>
+      <div class="big" style="font-size:24px">${fMxn(eu)} <small>de ${fMxn(cap)}</small></div>
+      <div class="bar"><i style="width:${cap?Math.min(100,eu/cap*100):100}%"></i></div>
+      <div class="st">${left>=0?`Quedan <b>${fMxn(left)}</b> (${fUsd(left)}) para extras.`:`<b>Se pasan por ${fMxn(-left)}</b> (${fUsd(-left)}). Bajen algo o suban el tope.`} <span class="muted">Hoteles, trenes, vuelos dentro de Europa y entradas, para ${pax()}. Sin los vuelos de México a Europa y de regreso.</span></div></div>
+    <div class="cap"><div class="hd"><div class="eyebrow">Comida</div><label for="food">US$<input id="food" type="number" min="0" step="50" value="${f}"></label></div>
+      <div class="big" style="font-size:24px">${fMxn(f)}</div>
+      <div class="st">Son <b>${fMxn(f/DAYS_N)}</b> al día para los dos (${fUsd(f/DAYS_N)}, unos €${Math.round(f/DAYS_N/S.fxEur)}) durante ${DAYS_N} días. <span class="muted">Desayuno de panadería, una comida fuerte y una cena sencilla.</span></div></div>`;
+}
 function totals(){
-  const all = ITEMS.reduce((a,i)=>a+usd(i),0), bk = ITEMS.filter(i=>S.booked[i.id]).reduce((a,i)=>a+usd(i),0);
+  caps();
+  const items = ITEMS.reduce((a,i)=>a+usd(i),0), all = items + foodUsd(), bk = ITEMS.filter(i=>S.booked[i.id]).reduce((a,i)=>a+usd(i),0);
   const n = ITEMS.filter(i=>priceOf(i)>0).length, nb = ITEMS.filter(i=>S.booked[i.id] && priceOf(i)>0).length;
-  $('#totals').innerHTML = `<div><div class="eyebrow">Total del viaje para ${pax()}</div><div class="big">${fMxn(all)}</div><div class="sub">${fUsd(all)} dólares</div></div>
+  $('#totals').innerHTML = `<div><div class="eyebrow">Total del viaje para ${pax()}, con comida</div><div class="big">${fMxn(all)}</div><div class="sub">${fUsd(all)} dólares · incluye ${fMxn(foodUsd())} de comida</div></div>
     <div><div class="eyebrow">Por persona</div><div class="big" style="font-size:24px">${fMxn(all/pax())}</div><div class="sub muted">${fUsd(all/pax())}</div></div>
-    <div><div class="eyebrow">Ya reservado</div><div class="big" style="font-size:24px">${fMxn(bk)}</div><div class="sub muted">${fUsd(bk)} · ${nb} de ${n} cosas · faltan ${fMxn(all-bk)}</div><div class="bar"><i style="width:${all?bk/all*100:0}%"></i></div></div>`;
+    <div><div class="eyebrow">Ya reservado</div><div class="big" style="font-size:24px">${fMxn(bk)}</div><div class="sub muted">${fUsd(bk)} · ${nb} de ${n} cosas · faltan ${fMxn(items-bk)}</div><div class="bar"><i style="width:${all?bk/all*100:0}%"></i></div></div>`;
 }
 const moneyLine = it => { const t = totalCur(it); return `<span class="money">${fMxn(usd(it))} <small>· ${fUsd(usd(it))}</small></span>`; };
 function unitLabel(it){ const n = pax();
@@ -376,8 +404,8 @@ function vList(cats, title, intro){
   return `<div class="sec-h"><h2>${title}</h2><span class="muted"><b class="mono" style="color:var(--ink)">${fMxn(tot)}</b> · ${fUsd(tot)} para ${pax()}</span></div>${intro?`<p class="muted" style="margin:-4px 0 14px;max-width:70ch">${intro}</p>`:''}<div class="grid">${its.map(ticket).join('')}</div>`;
 }
 function vPres(){
-  const all = ITEMS.reduce((a,i)=>a+usd(i),0);
-  const cats = Object.entries(CAT).map(([k,l])=>({l, v:ITEMS.filter(i=>i.cat===k).reduce((a,i)=>a+usd(i),0)})).sort((a,b)=>b.v-a.v);
+  const all = ITEMS.reduce((a,i)=>a+usd(i),0) + foodUsd();
+  const cats = [...Object.entries(CAT).map(([k,l])=>({l, v:ITEMS.filter(i=>i.cat===k).reduce((a,i)=>a+usd(i),0)})), {l:'Comida', v:foodUsd(), c:'var(--gold)'}].sort((a,b)=>b.v-a.v);
   const cities = Object.entries(CITY).map(([k,c])=>({l:c.n, c:c.c, v:ITEMS.filter(i=>i.city===k).reduce((a,i)=>a+usd(i),0)})).filter(x=>x.v>0);
   const max1 = Math.max(...cats.map(x=>x.v)), max2 = Math.max(...cities.map(x=>x.v));
   const row = (x, max) => `<div class="row" style="--c:${x.c||'var(--pass)'}"><span class="t">${esc(x.l)}</span><span class="tr"><i style="width:${x.v/max*100}%"></i></span><span class="v">${fMxn(x.v)}<small>${fUsd(x.v)}</small></span></div>`;
@@ -385,6 +413,7 @@ function vPres(){
     <div class="sec-h"><h2>Todo el viaje</h2><span class="muted">Marca lo que ya pagaste</span></div>
     <div class="tablewrap"><table><thead><tr><th></th><th>Fecha</th><th>Concepto</th><th>Ciudad</th><th class="r">Precio</th><th class="r">Para ${pax()} en pesos</th><th class="r">En dólares</th></tr></thead><tbody>
     ${[...ITEMS].sort((a,b)=>a.date.localeCompare(b.date)).map(i=>`<tr><td><input type="checkbox" id="tb_${i.id}" data-book="${i.id}" ${S.booked[i.id]?'checked':''} aria-label="Reservado: ${esc(i.t)}" style="width:17px;height:17px;accent-color:var(--pass)"></td><td class="num">${new Date(i.date+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'short'})}</td><td>${esc(i.t)}<br><small class="muted">${esc(CAT[i.cat])}</small></td><td>${esc(CITY[i.city].n)}</td><td class="r num">${fCur(priceOf(i),i.cur)}<br><small class="muted" style="font-family:var(--f-body)">${i.unit==='pp'?'c/u':i.unit==='noche'?'noche':i.unit==='ppdia'?'c/u al día':''}</small></td><td class="r num"><b>${fMxn(usd(i))}</b></td><td class="r num muted">${fUsd(usd(i))}</td></tr>`).join('')}
+    <tr><td></td><td class="num">29 oct – 8 nov</td><td>Comida<br><small class="muted">Presupuesto para los dos</small></td><td>Todo el viaje</td><td class="r num">${fUsd(foodUsd())}</td><td class="r num"><b>${fMxn(foodUsd())}</b></td><td class="r num muted">${fUsd(foodUsd())}</td></tr>
     <tr class="tot"><td></td><td></td><td>Total</td><td></td><td></td><td class="r num">${fMxn(all)}</td><td class="r num">${fUsd(all)}</td></tr></tbody></table></div>
     <div class="notes">
       <div class="box"><h3>Documentos</h3><p>Pasaporte vigente al menos 3 meses después del regreso. Los mexicanos no necesitan visa para Europa. En la primera entrada al espacio Schengen (Madrid) les toman huellas y foto: cuenten con fila.</p></div>
@@ -419,7 +448,7 @@ function vCuentas(){
     <div class="bar" style="margin-bottom:12px"><i style="width:${x.v?x.paid/x.v*100:0}%"></i></div>
     <div class="list2">${x.its.map(i=>`<div class="li ${S.booked[i.id]?'ok':''}"><input type="checkbox" id="cb_${i.id}" data-book="${i.id}" ${S.booked[i.id]?'checked':''} aria-label="Reservado: ${esc(i.t)}"><div style="min-width:0"><label for="cb_${i.id}"><b>${esc(i.t)}</b></label><br><small class="muted">${new Date(i.date+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'short'})} · ${esc(CITY[i.city].n)}${i.links().length?` · <a href="${esc(i.links()[0][1])}" target="_blank" rel="noopener">reservar ↗</a>`:''}</small></div><div class="amt"><b>${fMxn(usd(i))}</b><small>${fUsd(usd(i))}</small>${ownerSel(i,'co')}</div></div>`).join('')}</div></div>`;
   return `<div class="sec-h"><h2>Cuentas de Eric y Xime</h2><span class="muted">Total ${fMxn(all)} · a cada quien le toca ${fMxn(half)}</span></div>
-    <div class="warn" style="font-size:15px;margin-bottom:16px">${settle} Cambien quién paga cada cosa con el menú y todo se recalcula.</div>
+    <div class="warn" style="font-size:15px;margin-bottom:16px">${settle} Cambien quién paga cada cosa con el menú y todo se recalcula. La comida (${fMxn(foodUsd())}) va mitad y mitad: ${fMxn(foodUsd()/2)} cada quien.</div>
     <div class="bud">${col(A)}${col(B)}</div>`;
 }
 function vIdeas(){
@@ -428,8 +457,9 @@ function vIdeas(){
     ['Coliseo con subterráneos', 'Boleto que incluye los túneles bajo la arena (hipogeo), con hora.', 15, 'pp', 'https://colosseo.it/en/'],
     ['Cena en crucero por el Sena', 'Cena de varios tiempos navegando frente a la Torre Eiffel iluminada.', 90, 'pp', 'https://www.bateauxparisiens.com/es.html'],
     ['Clase de pasta en Florencia', 'Clase de 3 horas haciendo pasta fresca y tiramisú, con comida incluida.', 75, 'pp', 'https://www.getyourguide.es/florencia-l32/clases-de-cocina-tc71/']];
-  return `<div class="sec-h" style="margin-top:30px"><h2>Ideas para lo que ahorran</h2><span class="muted">No están sumadas en el total</span></div>
-    <div class="grid">${ideas.map(([t,d,p,u,l])=>{ const v = p*pax()*S.fxEur; return `<article class="tk" style="--c:var(--stamp)"><div class="th"><div style="min-width:0"><div class="k">Experiencia extra</div><h3>${esc(t)}</h3></div></div><div class="tb"><p>${esc(d)}</p><p><span class="money">${fMxn(v)} <small>· ${fUsd(v)} para ${pax()}</small></span><br><small class="muted">unos €${p} más por persona</small></p></div><div class="tf"><a class="btn" href="${l}" target="_blank" rel="noopener">Ver ↗</a></div></article>`; }).join('')}</div>`;
+  const left = (+S.capEu||0) - euSpend();
+  return `<div class="sec-h" style="margin-top:30px"><h2>Ideas para lo que ahorran</h2><span class="muted">No están sumadas · les quedan ${fMxn(Math.max(0,left))} en el tope de Europa</span></div>
+    <div class="grid">${ideas.map(([t,d,p,u,l])=>{ const v = p*pax()*S.fxEur; return `<article class="tk" style="--c:var(--stamp)"><div class="th"><div style="min-width:0"><div class="k">Experiencia extra</div><h3>${esc(t)}</h3></div></div><div class="tb"><p>${esc(d)}</p><p><span class="money">${fMxn(v)} <small>· ${fUsd(v)} para ${pax()}</small></span><br><small class="muted">unos €${p} más por persona</small></p><p>${v<=left?'<span class="who">Cabe en el tope</span>':'<span class="who" style="color:var(--stamp);background:var(--stamp-soft)">No cabe en el tope</span>'}</p></div><div class="tf"><a class="btn" href="${l}" target="_blank" rel="noopener">Ver ↗</a></div></article>`; }).join('')}</div>`;
 }
 const VIEWS = {dias:vDias, reservar:vReservar, cuentas:vCuentas,
   transporte:()=>vList(['vuelo','tren'],'Vuelos y trenes','Los vuelos por Europa son con aerolíneas que salen del mismo aeropuerto que su hotel. El tren de Roma a Florencia es más rápido que volar.'),
@@ -448,6 +478,8 @@ document.addEventListener('change', e => { const el = e.target;
   if (el.dataset.price){ const v = parseFloat(el.value); if (v>=0){ S.prices[el.dataset.price] = v; } save(); render(); return; }
   if (el.id==='fxEur'){ const v = parseFloat(el.value); if (v>0) S.fxEur = v; save(); render(); }
   if (el.id==='fxMxn'){ const v = parseFloat(el.value); if (v>0) S.fxMxn = v; save(); render(); }
+  if (el.id==='capEu'){ const v = parseFloat(el.value); if (v>=0) S.capEu = v; save(); render(); return; }
+  if (el.id==='food'){ const v = parseFloat(el.value); if (v>=0) S.food = v; save(); render(); return; }
   if (el.id==='fxPax'){ const v = parseInt(el.value,10); if (v>=1 && v<=10) S.pax = v; else el.value = pax(); save(); render(); }
 });
 render();
