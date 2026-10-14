@@ -175,7 +175,7 @@ tr.tot td{font-weight:700;background:color-mix(in srgb,var(--ink) 4%,transparent
     <div>
       <div class="eyebrow">Itinerario para 2 · 29 oct – 8 nov 2026</div>
       <h1>Madrid, París, Roma, Florencia y Milán</h1>
-      <p>Llegan a Madrid a las 5:00 am y siguen a París el mismo día. Cuatro días en París con Disneyland en Halloween, tres en Roma con un hotel de lujo, dos en Florencia, una noche en Milán y de regreso a Guadalajara en vuelo directo desde Madrid. Todo está calculado para Eric y Xime, en pesos y en dólares, con un tope de US$4,500 para gastos en Europa y US$1,000 para comida.</p>
+      <p>Llegan a Madrid a las 5:00 am y siguen a París el mismo día. Cuatro días en París con Disneyland en Halloween, tres en Roma en un hotel frente al Panteón, dos en Florencia, una noche en Milán y de regreso a Guadalajara en vuelo directo desde Madrid. Todo está calculado para Eric y Xime, en pesos y en dólares, con un presupuesto de US$4,500 para todo menos los vuelos, comida incluida.</p>
     </div>
     <div class="fx" aria-label="Tipo de cambio">
       <label for="fxEur">1 € en US$<input id="fxEur" type="number" step="0.001" min="0.5"></label>
@@ -248,8 +248,8 @@ const ITEMS = [
 
   {id:'h1', res:'Ya. 29 oct al 2 nov, habitación doble con baño privado.', cat:'hotel', city:'paris', date:'2026-10-29', out:'2026-11-02', nights:4, k:'Hotel económico', t:'Hotel de France Gare de Lyon Bastille', sub:'Sencillo pero calificado con 9.2 de 10, a 200 m de Gare de Lyon: RER A directo a Disneyland y metro 14 directo a Orly.', cur:'EUR', price:105, unit:'noche', tax:3,
     note:'Una habitación doble, 4 noches. Habitaciones pequeñas, como casi todo París. El impuesto turístico se paga en el hotel.', links:()=>[['Ver en Booking', bk('Hotel de France Gare de Lyon Bastille','2026-10-29','2026-11-02')], ['Comparar en Google Hoteles', gh('Hotel de France Gare de Lyon Bastille Paris')]]},
-  {id:'h2', res:'Ya. 2 al 5 nov, habitación doble.', cat:'hotel', city:'roma', date:'2026-11-02', out:'2026-11-05', nights:3, k:'Hotel 5★ · el lujo del viaje', t:'Hotel Raphael', sub:'El hotel cubierto de hiedra junto a la Piazza Navona, con terraza en la azotea y vista a la cúpula de San Pedro. A 3 minutos del Panteón y a 20 caminando del Vaticano.', cur:'EUR', price:420, unit:'noche', tax:10,
-    note:'Una habitación doble, 3 noches. Con impuesto sale en unos US$490 la noche, dentro de su tope de US$500. Roma cobra el impuesto por persona y noche en hoteles de 5★.', links:()=>[['Ver en Booking', bk('Hotel Raphael Roma','2026-11-02','2026-11-05')], ['Comparar en Google Hoteles', gh('Hotel Raphael Rome')]]},
+  {id:'h2', res:'Ya. 2 al 5 nov, habitación doble.', cat:'hotel', city:'roma', date:'2026-11-02', out:'2026-11-05', nights:3, k:'Hotel 4★ · el gusto del viaje', t:'Albergo del Senato', sub:'Frente al Panteón, con terraza en la azotea que mira directo a la cúpula. Calificación 9.2 a 9.6 de 10. A pasos de Piazza Navona y la Fontana di Trevi.', cur:'EUR', price:260, unit:'noche', tax:7.5,
+    note:'Una habitación doble, 3 noches. Es el hotel especial del viaje pero a mitad de precio que un 5 estrellas. Roma cobra el impuesto por persona y noche.', links:()=>[['Ver en Booking', bk('Albergo del Senato Roma','2026-11-02','2026-11-05')], ['Comparar en Google Hoteles', gh('Albergo del Senato Rome')]]},
   {id:'h3', res:'Ya. 5 al 7 nov. Elijan habitación doble con baño privado.', cat:'hotel', city:'florencia', date:'2026-11-05', out:'2026-11-07', nights:2, k:'Hotel económico', t:'Hotel Dalì', sub:'Hotel familiar muy querido (8.7 de 10) a 10 minutos caminando del Duomo y de la Piazza della Signoria.', cur:'EUR', price:85, unit:'noche', tax:3.5,
     note:'Una habitación doble, 2 noches. Tiene cuartos con baño compartido: asegúrense de elegir uno con baño privado. Impuesto de Florencia: €3.50 por persona y noche.', links:()=>[['Ver en Booking', bk('Hotel Dali Florence','2026-11-05','2026-11-07')], ['Comparar en Google Hoteles', gh('Hotel Dali Florence')]]},
   {id:'h4', res:'Ya. 7 al 8 nov, habitación doble.', cat:'hotel', city:'milan', date:'2026-11-07', out:'2026-11-08', nights:1, k:'Hotel económico', t:'Smart Hotel Milano', sub:'Moderno y sencillo (8.6 de 10), a 100 m de Milano Centrale: bajan del tren y al día siguiente toman ahí el tren al aeropuerto.', cur:'EUR', price:65, unit:'noche', tax:3,
@@ -293,8 +293,8 @@ const DAYS = [
   {date:'2026-11-02', city:'roma', t:'París → Roma', items:['v2','t3','h2','e8'], steps:[
     ['07:45','Metro 14 de Gare de Lyon a Orly (25 min).'],
     ['09:55','Transavia TO 3914 a Roma-Fiumicino. Llegan a las 12:00.'],
-    ['12:45','Taxi de tarifa fija al Hotel Raphael, junto a la Piazza Navona.'],
-    ['17:00','Panteón, Fontana di Trevi y Piazza Navona de noche. Un aperitivo en la terraza del hotel.']]},
+    ['12:45','Taxi de tarifa fija al Albergo del Senato, frente al Panteón.'],
+    ['17:00','Panteón, Fontana di Trevi y Piazza Navona de noche. Un aperitivo en la azotea del hotel viendo la cúpula del Panteón.']]},
   {date:'2026-11-03', city:'roma', t:'El Vaticano', items:['e6','t4'], steps:[
     ['08:00','Museos Vaticanos y Capilla Sixtina con hora reservada.'],
     ['12:30','Basílica de San Pedro (gratis). Ropa que cubra hombros y rodillas.'],
@@ -350,18 +350,17 @@ if (!S.owner) S.owner = {}; if (S.booked.g0 == null) S.booked.g0 = true;
 const ownerOf = i => S.owner[i.id] || OWNER_DEF[i.id] || 'Eric';
 const ownerSel = (i, idp='o') => `<select id="${idp}_${i.id}" data-owner="${i.id}" aria-label="Quién paga ${esc(i.t)}" class="osel">${PEOPLE.map(n=>`<option ${ownerOf(i)===n?'selected':''}>${n}</option>`).join('')}</select>`;
 
-const LONGHAUL = ['g0','v4'];
 const DAYS_N = 11;
-const euItems = () => ITEMS.filter(i=>!LONGHAUL.includes(i.id));
-const euSpend = () => euItems().reduce((a,i)=>a+usd(i),0);
 const foodUsd = () => Math.max(0, +S.food || 0);
+const euItems = () => ITEMS.filter(i=>i.cat!=='vuelo');
+const euSpend = () => euItems().reduce((a,i)=>a+usd(i),0) + foodUsd();
 function caps(){
   const cap = Math.max(0, +S.capEu || 0), eu = euSpend(), left = cap - eu, f = foodUsd();
-  $('#caps').innerHTML = `<div class="cap ${left<0?'over':''}"><div class="hd"><div class="eyebrow">Gastos en Europa</div><label for="capEu">Tope US$<input id="capEu" type="number" min="0" step="50" value="${cap}"></label></div>
+  $('#caps').innerHTML = `<div class="cap ${left<0?'over':''}"><div class="hd"><div class="eyebrow">Presupuesto sin vuelos</div><label for="capEu">Tope US$<input id="capEu" type="number" min="0" step="50" value="${cap}"></label></div>
       <div class="big" style="font-size:24px">${fMxn(eu)} <small>de ${fMxn(cap)}</small></div>
       <div class="bar"><i style="width:${cap?Math.min(100,eu/cap*100):100}%"></i></div>
-      <div class="st">${left>=0?`Quedan <b>${fMxn(left)}</b> (${fUsd(left)}) para extras.`:`<b>Se pasan por ${fMxn(-left)}</b> (${fUsd(-left)}). Bajen algo o suban el tope.`} <span class="muted">Hoteles, trenes, vuelos dentro de Europa y entradas, para ${pax()}. Sin los vuelos de México a Europa y de regreso.</span></div></div>
-    <div class="cap"><div class="hd"><div class="eyebrow">Comida</div><label for="food">US$<input id="food" type="number" min="0" step="50" value="${f}"></label></div>
+      <div class="st">${left>=0?`Quedan <b>${fMxn(left)}</b> (${fUsd(left)}) para extras.`:`<b>Se pasan por ${fMxn(-left)}</b> (${fUsd(-left)}). Bajen algo o suban el tope.`} <span class="muted">Hoteles, trenes, traslados, entradas y comida, para ${pax()}. Todos los vuelos van aparte.</span></div></div>
+    <div class="cap"><div class="hd"><div class="eyebrow">Comida (dentro del presupuesto)</div><label for="food">US$<input id="food" type="number" min="0" step="50" value="${f}"></label></div>
       <div class="big" style="font-size:24px">${fMxn(f)}</div>
       <div class="st">Son <b>${fMxn(f/DAYS_N)}</b> al día para los dos (${fUsd(f/DAYS_N)}, unos €${Math.round(f/DAYS_N/S.fxEur)}) durante ${DAYS_N} días. <span class="muted">Desayuno de panadería, una comida fuerte y una cena sencilla.</span></div></div>`;
 }
@@ -458,12 +457,12 @@ function vIdeas(){
     ['Cena en crucero por el Sena', 'Cena de varios tiempos navegando frente a la Torre Eiffel iluminada.', 90, 'pp', 'https://www.bateauxparisiens.com/es.html'],
     ['Clase de pasta en Florencia', 'Clase de 3 horas haciendo pasta fresca y tiramisú, con comida incluida.', 75, 'pp', 'https://www.getyourguide.es/florencia-l32/clases-de-cocina-tc71/']];
   const left = (+S.capEu||0) - euSpend();
-  return `<div class="sec-h" style="margin-top:30px"><h2>Ideas para lo que ahorran</h2><span class="muted">No están sumadas · les quedan ${fMxn(Math.max(0,left))} en el tope de Europa</span></div>
-    <div class="grid">${ideas.map(([t,d,p,u,l])=>{ const v = p*pax()*S.fxEur; return `<article class="tk" style="--c:var(--stamp)"><div class="th"><div style="min-width:0"><div class="k">Experiencia extra</div><h3>${esc(t)}</h3></div></div><div class="tb"><p>${esc(d)}</p><p><span class="money">${fMxn(v)} <small>· ${fUsd(v)} para ${pax()}</small></span><br><small class="muted">unos €${p} más por persona</small></p><p>${v<=left?'<span class="who">Cabe en el tope</span>':'<span class="who" style="color:var(--stamp);background:var(--stamp-soft)">No cabe en el tope</span>'}</p></div><div class="tf"><a class="btn" href="${l}" target="_blank" rel="noopener">Ver ↗</a></div></article>`; }).join('')}</div>`;
+  return `<div class="sec-h" style="margin-top:30px"><h2>Ideas para lo que ahorran</h2><span class="muted">No están sumadas · les quedan ${fMxn(Math.max(0,left))} en el presupuesto</span></div>
+    <div class="grid">${ideas.map(([t,d,p,u,l])=>{ const v = p*pax()*S.fxEur; return `<article class="tk" style="--c:var(--stamp)"><div class="th"><div style="min-width:0"><div class="k">Experiencia extra</div><h3>${esc(t)}</h3></div></div><div class="tb"><p>${esc(d)}</p><p><span class="money">${fMxn(v)} <small>· ${fUsd(v)} para ${pax()}</small></span><br><small class="muted">unos €${p} más por persona</small></p><p>${v<=left?'<span class="who">Cabe en el presupuesto</span>':'<span class="who" style="color:var(--stamp);background:var(--stamp-soft)">No cabe en el presupuesto</span>'}</p></div><div class="tf"><a class="btn" href="${l}" target="_blank" rel="noopener">Ver ↗</a></div></article>`; }).join('')}</div>`;
 }
 const VIEWS = {dias:vDias, reservar:vReservar, cuentas:vCuentas,
   transporte:()=>vList(['vuelo','tren'],'Vuelos y trenes','Los vuelos por Europa son con aerolíneas que salen del mismo aeropuerto que su hotel. El tren de Roma a Florencia es más rápido que volar.'),
-  hoteles:()=>vList(['hotel'],'Hoteles','Hoteles económicos pero muy bien calificados y junto al transporte en París, Florencia y Milán, para gastar en experiencias. En Roma, el 5 estrellas para darse el lujo, hasta US$500 la noche. Precio por habitación doble.')+vIdeas(),
+  hoteles:()=>vList(['hotel'],'Hoteles','Hoteles económicos pero muy bien calificados y junto al transporte en París, Florencia y Milán, para gastar en experiencias. En Roma, un hotel especial frente al Panteón. Precio por habitación doble.')+vIdeas(),
   entradas:()=>vList(['entrada'],'Entradas','Precios oficiales de 2026 por persona. Casi todo se compra con día y hora: reserven en cuanto tengan fechas.'),
   presupuesto:vPres};
 function render(){
