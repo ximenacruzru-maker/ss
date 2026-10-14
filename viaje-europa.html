@@ -325,9 +325,9 @@ const DAYS = [
 ];
 
 const PEOPLE = ['Eric','Xime'];
-const OWNER_DEF = {g0:'Eric', h2:'Xime', h3:'Xime', e1:'Xime', v3:'Xime', v4:'Xime', h4:'Eric'};
+const OWNER_DEF = {g0:'Eric', e1:'Xime', e3:'Xime', e4:'Xime', e5:'Xime', e6:'Xime', e7:'Xime', e9:'Xime', e10:'Xime', e11:'Xime', e12:'Xime', e13:'Xime', t5:'Xime', h1:'Xime', h3:'Xime', v3:'Xime', v4:'Xime'};
 const KEY = 'europa-2026-v1';
-const DEF = {fxEur:1.12, fxMxn:18.35, pax:2, tab:'dias', prices:{}, booked:{}, owner:{}, capEu:4500, food:1000};
+const DEF = {fxEur:1.12, fxMxn:18.35, pax:2, tab:'dias', prices:{}, booked:{}, owner:{}, capEu:4500, food:1000, ownerV:2};
 let S; try { S = Object.assign({}, DEF, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch(e){ S = Object.assign({}, DEF); }
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} };
 const $ = s => document.querySelector(s);
@@ -346,7 +346,7 @@ const fMxn = v => 'MX$' + Math.round(v*S.fxMxn).toLocaleString('es-MX');
 const fCur = (v, cur) => (cur==='EUR' ? '€' : 'US$') + (Math.round(v*100)/100).toLocaleString('es-MX', {maximumFractionDigits:2});
 const fmtDay = d => new Date(d+'T12:00:00').toLocaleDateString('es-MX', {weekday:'long', day:'numeric', month:'short'});
 const byId = id => ITEMS.find(i=>i.id===id);
-if (!S.owner) S.owner = {}; if (S.booked.g0 == null) S.booked.g0 = true;
+if (!S.owner || S.ownerV !== 2){ S.owner = {}; S.ownerV = 2; } if (S.booked.g0 == null) S.booked.g0 = true;
 const ownerOf = i => S.owner[i.id] || OWNER_DEF[i.id] || 'Eric';
 const ownerSel = (i, idp='o') => `<select id="${idp}_${i.id}" data-owner="${i.id}" aria-label="Quién paga ${esc(i.t)}" class="osel">${PEOPLE.map(n=>`<option ${ownerOf(i)===n?'selected':''}>${n}</option>`).join('')}</select>`;
 
